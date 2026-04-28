@@ -1,0 +1,2230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Results &middot; Street Parking Presence Inference</title>
+    <meta
+      name="description"
+      content="Quantitative tables, validation plots, qualitative findings, and annotated real-world segments for the multi-cue parking inference pipeline."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="nav-brand-tag">CS 766</span>
+          <span class="nav-brand-title">Street Parking Presence Inference</span>
+        </a>
+        <button
+          class="nav-toggle"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          &#9776;
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="motivation.html">Motivation</a></li>
+          <li><a href="approach.html">Approach</a></li>
+          <li><a href="results.html">Results</a></li>
+          <li><a href="challenges.html">Challenges</a></li>
+          <li><a href="conclusion.html">Conclusion</a></li>
+          <li><a href="documents.html">Documents</a></li>
+          <li><a href="code.html">Code</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <header class="page-hero">
+      <div class="container">
+        <p class="breadcrumb">Project &middot; Results</p>
+        <h1>
+          Quantitative results, validation plots, and qualitative findings
+        </h1>
+        <p>
+          The page is split into four parts: quantitative tables, standard YOLO
+          validation plots, qualitative error analysis, and annotated real-world
+          segment examples. Each subsection is tagged with its cue so the casual
+          reader can jump straight to what they care about.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <div class="container container-narrow">
+        <nav class="toc toc-multi" aria-label="On this page">
+          <h4>On this page</h4>
+          <div class="toc-cols">
+            <div class="toc-col">
+              <p class="toc-section">
+                <a href="#quantitative"
+                  ><span class="toc-prefix">1.</span>Quantitative results</a
+                >
+              </p>
+              <ul class="toc-sublist">
+                <li>
+                  <a href="#sign-results"
+                    ><span class="toc-prefix">1.1</span>Parking-sign
+                    detection</a
+                  >
+                </li>
+                <li>
+                  <a href="#thresholds"
+                    ><span class="toc-prefix">1.2</span>Threshold analysis</a
+                  >
+                </li>
+                <li>
+                  <a href="#progress"
+                    ><span class="toc-prefix">1.3</span>Training progress over
+                    time</a
+                  >
+                </li>
+                <li>
+                  <a href="#meter-results"
+                    ><span class="toc-prefix">1.4</span>Zero-shot
+                    parking-meter</a
+                  >
+                </li>
+                <li>
+                  <a href="#curb-results"
+                    ><span class="toc-prefix">1.5</span>Curb segmentation &amp;
+                    color</a
+                  >
+                </li>
+                <li>
+                  <a href="#synthetic"
+                    ><span class="toc-prefix">1.6</span>Synthetic segment
+                    aggregation</a
+                  >
+                </li>
+                <li>
+                  <a href="#manual-quant"
+                    ><span class="toc-prefix">1.7</span>Manual real-world
+                    scores</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="toc-col">
+              <p class="toc-section">
+                <a href="#yolo-plots"
+                  ><span class="toc-prefix">2.</span>Validation plots</a
+                >
+              </p>
+              <ul class="toc-sublist">
+                <li>
+                  <a href="#detection-curves"
+                    ><span class="toc-prefix">2.1</span>Detection curves</a
+                  >
+                </li>
+                <li>
+                  <a href="#confusion-mats"
+                    ><span class="toc-prefix">2.2</span>Confusion matrices</a
+                  >
+                </li>
+              </ul>
+              <p class="toc-section">
+                <a href="#qualitative"
+                  ><span class="toc-prefix">3.</span>Qualitative findings</a
+                >
+              </p>
+              <ul class="toc-sublist">
+                <li>
+                  <a href="#scale-sens"
+                    ><span class="toc-prefix">3.1</span>Resolution &amp; scale
+                    sensitivity</a
+                  >
+                </li>
+                <li>
+                  <a href="#partial-loc"
+                    ><span class="toc-prefix">3.2</span>Partial localization of
+                    signs</a
+                  >
+                </li>
+                <li>
+                  <a href="#small-image"
+                    ><span class="toc-prefix">3.3</span>Non-intuitive
+                    small-image case</a
+                  >
+                </li>
+                <li>
+                  <a href="#meter-qual"
+                    ><span class="toc-prefix">3.4</span>Parking-meter
+                    findings</a
+                  >
+                </li>
+                <li>
+                  <a href="#curb-seg-qual"
+                    ><span class="toc-prefix">3.5</span>Curb segmentation</a
+                  >
+                </li>
+                <li>
+                  <a href="#curb-color-qual"
+                    ><span class="toc-prefix">3.6</span>Curb color</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="toc-col">
+              <p class="toc-section">
+                <a href="#annotated"
+                  ><span class="toc-prefix">4.</span>Annotated segments</a
+                >
+              </p>
+              <ul class="toc-sublist">
+                <li>
+                  <a href="#seg-001"
+                    ><span class="toc-prefix">4.1</span>seg_001 &mdash;
+                    meter-only</a
+                  >
+                </li>
+                <li>
+                  <a href="#seg-003"
+                    ><span class="toc-prefix">4.2</span>seg_003 &mdash;
+                    curb-color</a
+                  >
+                </li>
+                <li>
+                  <a href="#seg-004"
+                    ><span class="toc-prefix">4.3</span>seg_004 &mdash;
+                    complementary</a
+                  >
+                </li>
+                <li>
+                  <a href="#seg-005"
+                    ><span class="toc-prefix">4.4</span>seg_005 &mdash; OOD
+                    failure</a
+                  >
+                </li>
+                <li>
+                  <a href="#additional-segments"
+                    ><span class="toc-prefix">4.5</span>Additional segments</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <div class="cue-legend" aria-label="Cue legend">
+          <span class="cue-tag cue-sign">Parking sign</span>
+          <span class="cue-tag cue-meter">Parking meter</span>
+          <span class="cue-tag cue-curb">Curb</span>
+          <span class="cue-tag cue-aggregation">Aggregation</span>
+        </div>
+
+        <!-- ================================================================== -->
+        <!-- 1. QUANTITATIVE RESULTS                                              -->
+        <!-- ================================================================== -->
+        <section class="section" id="quantitative">
+          <h2 class="section-title">1. Quantitative results</h2>
+          <p class="section-lead">
+            Validation metrics for each cue detector individually, then for the
+            aggregated segment-level system.
+          </p>
+
+          <!-- 1.1 SIGN DETECTION -->
+          <h3 id="sign-results">
+            1.1 Parking-sign detection
+            <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <p>
+            Final validation results from the best checkpoint after 50 epochs:
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th class="num">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>mAP@50</td>
+                  <td class="num">0.5487</td>
+                </tr>
+                <tr>
+                  <td>mAP@50&ndash;95</td>
+                  <td class="num">0.3824</td>
+                </tr>
+                <tr>
+                  <td>Precision (box-level)</td>
+                  <td class="num">0.6616</td>
+                </tr>
+                <tr>
+                  <td>Recall (box-level)</td>
+                  <td class="num">0.5373</td>
+                </tr>
+                <tr>
+                  <td>Best image-level threshold</td>
+                  <td class="num">0.15</td>
+                </tr>
+                <tr>
+                  <td>Best image-level F1</td>
+                  <td class="num"><strong>0.6673</strong></td>
+                </tr>
+                <tr>
+                  <td>Image-level AUROC</td>
+                  <td class="num"><strong>0.8310</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 1. Main validation results for the parking-sign detector.
+          </p>
+
+          <p>
+            The box-level metrics show that the model is learning to localize
+            parking signs reasonably well, while the image-level F1 and AUROC
+            show that it can separate positive and negative images with useful
+            reliability.
+          </p>
+
+          <!-- 1.2 THRESHOLD ANALYSIS -->
+          <h3 id="thresholds">
+            1.2 Threshold analysis <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <p>
+            We swept the confidence threshold to study the precision-recall
+            trade-off at the image level for the sign detector.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="num">Threshold</th>
+                  <th class="num">Precision</th>
+                  <th class="num">Recall</th>
+                  <th class="num">F1</th>
+                  <th class="num">Accuracy</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="num">0.15</td>
+                  <td class="num">0.6913</td>
+                  <td class="num">0.6448</td>
+                  <td class="num"><strong>0.6673</strong></td>
+                  <td class="num">0.9299</td>
+                </tr>
+                <tr>
+                  <td class="num">0.20</td>
+                  <td class="num">0.7328</td>
+                  <td class="num">0.6052</td>
+                  <td class="num">0.6629</td>
+                  <td class="num">0.9329</td>
+                </tr>
+                <tr>
+                  <td class="num">0.30</td>
+                  <td class="num">0.7565</td>
+                  <td class="num">0.5517</td>
+                  <td class="num">0.6381</td>
+                  <td class="num">0.9318</td>
+                </tr>
+                <tr>
+                  <td class="num">0.50</td>
+                  <td class="num">0.8262</td>
+                  <td class="num">0.4672</td>
+                  <td class="num">0.5969</td>
+                  <td class="num">0.9312</td>
+                </tr>
+                <tr>
+                  <td class="num">0.70</td>
+                  <td class="num">0.9150</td>
+                  <td class="num">0.3155</td>
+                  <td class="num">0.4692</td>
+                  <td class="num">0.9222</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 2. Image-level threshold sweep on the sign-detector validation
+            set.
+          </p>
+
+          <div class="callout">
+            <p class="mb-0">
+              The best operating threshold is around <strong>0.15</strong>. This
+              is relatively low, which indicates that many useful detections are
+              not extremely high-confidence. If a very strict confidence
+              threshold is used, recall drops sharply and many parking cues are
+              lost. This is exactly the kind of behavior that makes
+              <strong>aggregation</strong> valuable: several weak or partial
+              detections across nearby images may still provide strong
+              segment-level evidence.
+            </p>
+          </div>
+
+          <!-- 1.3 TRAINING PROGRESS -->
+          <h3 id="progress">
+            1.3 Training progress over time
+            <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <p>Key sign-detector checkpoints during training:</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Checkpoint</th>
+                  <th class="num">mAP@50</th>
+                  <th class="num">Image-level F1</th>
+                  <th class="num">AUROC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Epoch 20</td>
+                  <td class="num">0.4835</td>
+                  <td class="num">0.6430</td>
+                  <td class="num">0.8088</td>
+                </tr>
+                <tr>
+                  <td>Epoch 25</td>
+                  <td class="num">0.5065</td>
+                  <td class="num">0.6535</td>
+                  <td class="num">0.8226</td>
+                </tr>
+                <tr>
+                  <td>Epoch 50</td>
+                  <td class="num"><strong>0.5487</strong></td>
+                  <td class="num"><strong>0.6673</strong></td>
+                  <td class="num"><strong>0.8310</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 3. Progression of sign-detector validation performance across
+            checkpoints.
+          </p>
+
+          <p>
+            The model improved steadily throughout training. However, the gains
+            from epoch 25 to epoch 50 were smaller than the gains earlier in
+            training, suggesting that the detector is approaching a plateau.
+            <strong
+              >Future gains are more likely to come from aggregation and
+              additional cues than from extensive further tuning of the sign
+              detector alone.</strong
+            >
+          </p>
+
+          <!-- 1.4 METER RESULTS -->
+          <h3 id="meter-results">
+            1.4 Zero-shot parking-meter results
+            <span class="cue-tag cue-meter">Meter</span>
+          </h3>
+          <p>
+            In addition to the trained parking-sign baseline, we performed a
+            preliminary zero-shot experiment for parking-meter detection. We
+            used a COCO-pretrained <strong>YOLO11x</strong> detector and
+            evaluated on the Mapillary Vistas validation split (<code
+              >object--parking-meter</code
+            >
+            as ground truth):
+          </p>
+          <ul>
+            <li>2,000 validation images</li>
+            <li>50 positive images (at least one parking meter)</li>
+            <li>1,950 negative images</li>
+          </ul>
+
+          <p>
+            Before evaluating on the full validation set, we ran a
+            positives-only sweep to understand the effect of inference
+            resolution and confidence threshold. That sweep showed that larger
+            input resolution substantially improves recall, consistent with the
+            qualitative observation that parking meters are often very small in
+            street-view imagery. Based on this analysis we selected
+            <code>imgsz=1280</code> for the full run.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="num">imgsz</th>
+                  <th class="num">conf</th>
+                  <th class="num">Img P</th>
+                  <th class="num">Img R</th>
+                  <th class="num">Img F1</th>
+                  <th class="num">Box P</th>
+                  <th class="num">Box R</th>
+                  <th class="num">Box F1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="num">1280</td>
+                  <td class="num">0.05</td>
+                  <td class="num">0.109</td>
+                  <td class="num">0.520</td>
+                  <td class="num">0.181</td>
+                  <td class="num">0.0469</td>
+                  <td class="num">0.168</td>
+                  <td class="num">0.0734</td>
+                </tr>
+                <tr>
+                  <td class="num">1280</td>
+                  <td class="num">0.10</td>
+                  <td class="num"><strong>0.158</strong></td>
+                  <td class="num">0.480</td>
+                  <td class="num"><strong>0.238</strong></td>
+                  <td class="num"><strong>0.0758</strong></td>
+                  <td class="num">0.158</td>
+                  <td class="num"><strong>0.1020</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 4. Zero-shot parking-meter evaluation on the Mapillary Vistas
+            validation set using a COCO-pretrained YOLO11x.
+          </p>
+
+          <p>
+            For the better setting (<code>imgsz=1280, conf=0.10</code>), the
+            detailed counts are:
+          </p>
+          <ul>
+            <li>Image-level: TP = 24, FP = 128, TN = 1822, FN = 26</li>
+            <li>Box-level: TP = 15, FP = 183, FN = 80</li>
+          </ul>
+
+          <div class="callout callout-warn">
+            <p>Three takeaways:</p>
+            <ul class="mb-0">
+              <li>
+                <strong>Zero-shot transfer is real but limited.</strong> The
+                detector recovers nearly half of positive parking-meter images
+                at the image level, so it is not behaving randomly.
+              </li>
+              <li>
+                <strong>Precision is poor.</strong> Many false positives,
+                especially on pole-like objects and other narrow vertical street
+                furniture.
+              </li>
+              <li>
+                <strong
+                  >Parking meters are therefore a weak auxiliary cue.</strong
+                >
+                Useful in a multi-cue system, but not reliable enough to serve
+                as a primary cue by themselves.
+              </li>
+            </ul>
+          </div>
+
+          <p>
+            Between the two settings, <code>conf=0.10</code> gives the better
+            overall trade-off because it substantially reduces false positives
+            while only slightly reducing recall &mdash; the more reasonable
+            operating point if parking-meter scores are later incorporated into
+            cue fusion.
+          </p>
+
+          <!-- 1.5 CURB RESULTS -->
+          <h3 id="curb-results">
+            1.5 Curb segmentation and color results
+            <span class="cue-tag cue-curb">Curb</span>
+          </h3>
+          <p>
+            We trained a U-Net curb segmentation model on Mapillary Vistas
+            (<code>construction--barrier--curb</code> as foreground, binary).
+            Trained for <strong>20 epochs</strong>; best validation checkpoint
+            at <strong>epoch 17</strong>:
+          </p>
+
+          <div class="stat-grid">
+            <div class="stat">
+              <span class="stat-value">0.5184</span
+              ><span class="stat-label">Best val Dice</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">0.4238</span
+              ><span class="stat-label">Best val IoU</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">0.5047</span
+              ><span class="stat-label">Final val Dice</span>
+            </div>
+          </div>
+
+          <p>
+            Several trends are visible in the curves: training and validation
+            losses fall rapidly in the early epochs and then fluctuate within a
+            narrower range; Dice and IoU improve substantially during the first
+            half of training and then plateau; the best validation checkpoint
+            occurs before the final epoch &mdash; additional training does not
+            fundamentally change the learned representation. This matches the
+            qualitative observation that the model learns to localize curb
+            boundaries reasonably well, and the remaining errors are largely due
+            to the intrinsic difficulty of thin-structure segmentation rather
+            than undertraining.
+          </p>
+
+          <div class="figure-grid cols-3">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="curb-curves"
+                src="assets/images/curb_loss_curve_20ep.png"
+                alt="Curb segmentation loss curves"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Training and validation loss (20 epochs).
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="curb-curves"
+                src="assets/images/curb_dice_curve_20ep.png"
+                alt="Curb segmentation Dice curves"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Validation Dice (best at epoch 17).
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="curb-curves"
+                src="assets/images/curb_iou_curve_20ep.png"
+                alt="Curb segmentation IoU curves"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">Validation IoU.</figcaption>
+            </figure>
+          </div>
+
+          <h4>Curb-color distribution on the validation set</h4>
+          <p>
+            Using the curb segmentation output, we ran curb color inference on
+            the 2,000-image validation split. The segmentation model was first
+            used to predict curb masks, and then an HSV-based color analysis was
+            applied to the predicted curb boundaries. The final color assignment
+            was restricted to the set
+            <code>{red, yellow, green, white, gray, unknown}</code>, with a
+            conservative fallback to <code>unknown</code> whenever evidence was
+            weak or ambiguous.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dominant color</th>
+                  <th class="num">Count</th>
+                  <th class="num">Fraction</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Unknown</td>
+                  <td class="num">937</td>
+                  <td class="num">46.85%</td>
+                </tr>
+                <tr>
+                  <td>Gray</td>
+                  <td class="num">835</td>
+                  <td class="num">41.75%</td>
+                </tr>
+                <tr>
+                  <td>Yellow</td>
+                  <td class="num">190</td>
+                  <td class="num">9.50%</td>
+                </tr>
+                <tr>
+                  <td>Green</td>
+                  <td class="num">21</td>
+                  <td class="num">1.05%</td>
+                </tr>
+                <tr>
+                  <td>White</td>
+                  <td class="num">13</td>
+                  <td class="num">0.65%</td>
+                </tr>
+                <tr>
+                  <td>Red</td>
+                  <td class="num">4</td>
+                  <td class="num">0.20%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 5. Validation-set distribution of dominant curb-color
+            predictions from the curb-analysis pipeline.
+          </p>
+
+          <div class="callout">
+            <p>Three conclusions:</p>
+            <ul class="mb-0">
+              <li>
+                Curb segmentation recovers enough structure for downstream color
+                analysis on a substantial fraction of images, even though the
+                masks are often thin and fragmented.
+              </li>
+              <li>
+                <strong>Strong painted curb colors are sparse.</strong> Gray and
+                unknown dominate, consistent with most curbs being unpainted,
+                weakly painted, or visually ambiguous.
+              </li>
+              <li>
+                Conservative uncertainty handling is necessary &mdash; forcing a
+                hard color in every case would introduce many incorrect labels.
+              </li>
+            </ul>
+          </div>
+
+          <p class="muted small">
+            An earlier version of the color pipeline used all predicted mask
+            pixels for color extraction. That approach produced noticeably more
+            contamination from nearby white road markings and crosswalks. After
+            switching to <strong>boundary-based color extraction</strong>, the
+            number of white predictions dropped substantially while gray became
+            more common, suggesting the revised pipeline more accurately
+            captures curb surface color rather than nearby painted road
+            elements. Some recall is traded for better precision and
+            interpretability.
+          </p>
+
+          <!-- 1.6 SYNTHETIC AGGREGATION -->
+          <h3 id="synthetic">
+            1.6 Segment-level synthetic aggregation
+            <span class="cue-tag cue-aggregation">Aggregation</span>
+          </h3>
+          <p>
+            The segment-level aggregation experiment is the main system-level
+            result of the project. The synthetic pseudo-segment benchmark
+            contains <strong>225 five-image segments</strong>: 80 negative
+            segments and 145 positive segments. Positive segments were
+            constructed to include at least one parking-related cue, while
+            negative segments contained no selected strong cue. The construction
+            tests whether a segment-level rule can recover sparse evidence
+            distributed across multiple views.
+          </p>
+
+          <p>Final cue-pool sizes used to build this dataset:</p>
+          <ul>
+            <li>Sign-positive images: <strong>4,446</strong></li>
+            <li>Meter-positive images: <strong>50</strong></li>
+            <li>Strong curb-color images: <strong>228</strong></li>
+            <li>None / neutral images: <strong>41,185</strong></li>
+          </ul>
+          <p class="muted small">
+            The meter pool is especially small. This directly shaped the final
+            segment distribution &mdash; we reduced meter-heavy segment types to
+            avoid reusing the same meter examples too frequently. Repeated reuse
+            would make the evaluation less diverse and would overstate the
+            amount of meter evidence available in the data.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Segment type</th>
+                  <th class="num">Number</th>
+                  <th class="num">Label</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>None</td>
+                  <td class="num">80</td>
+                  <td class="num">0</td>
+                </tr>
+                <tr>
+                  <td>Sign only</td>
+                  <td class="num">50</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td>Meter only</td>
+                  <td class="num">15</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td>Curb color only</td>
+                  <td class="num">25</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td>Sign + meter</td>
+                  <td class="num">15</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td>Sign + curb color</td>
+                  <td class="num">20</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td>Meter + curb color</td>
+                  <td class="num">10</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td>Sign + meter + curb color</td>
+                  <td class="num">10</td>
+                  <td class="num">1</td>
+                </tr>
+                <tr>
+                  <td><strong>Total</strong></td>
+                  <td class="num"><strong>225</strong></td>
+                  <td class="num">&mdash;</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 6. Final synthetic pseudo-segment distribution. Each segment
+            contains five images. The skew reflects cue sparsity, with more
+            negative and sign-only segments and fewer meter-heavy combinations.
+          </p>
+
+          <p>
+            The synthetic dataset should be interpreted with the correct scope.
+            It does <strong>not</strong> claim that randomly combined images are
+            actual road-neighboring views. It is a controlled multiple-instance
+            benchmark for the aggregation mechanism &mdash; useful because it
+            isolates a key property of the task: a segment may be positive even
+            if only one of several views contains visible evidence.
+          </p>
+
+          <h4>Aggregation vs. single-image baseline</h4>
+          <p>
+            The baseline uses one selected image from each segment and applies
+            only the sign score. This simulates a single-view deployment
+            setting. The aggregation method uses all five images and combines
+            sign, meter, and curb evidence using the weighted-max rule described
+            in
+            <a href="approach.html#aggregation"
+              >Approach &rsaquo; Segment-level aggregation</a
+            >.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th class="num">Threshold</th>
+                  <th class="num">Precision</th>
+                  <th class="num">Recall</th>
+                  <th class="num">F1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Single-image baseline</td>
+                  <td class="num">0.05</td>
+                  <td class="num">0.784</td>
+                  <td class="num">0.200</td>
+                  <td class="num">0.319</td>
+                </tr>
+                <tr>
+                  <td>Segment aggregation</td>
+                  <td class="num">0.15</td>
+                  <td class="num">0.753</td>
+                  <td class="num"><strong>0.924</strong></td>
+                  <td class="num"><strong>0.830</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 7. Synthetic pseudo-segment aggregation results. Aggregation
+            substantially improves recall and F1 compared with a single-image
+            per-segment baseline.
+          </p>
+
+          <div class="callout callout-success">
+            <p class="mb-0">
+              The result is strong and directly supports the project hypothesis.
+              The single-image baseline has high precision but extremely low
+              recall: when it detects a sign the prediction is meaningful, but
+              it misses most positive segments because the selected view often
+              lacks visible evidence. Aggregation makes the opposite trade-off
+              &mdash; precision drops only slightly (0.784 &rarr; 0.753), but
+              recall rises from 0.200 to 0.924.
+              <strong
+                >Aggregation is mainly solving the false-negative problem caused
+                by sparse cue visibility.</strong
+              >
+              Precision decreases slightly because aggregation treats any strong
+              cue from any view as sufficient evidence, which increases true
+              positives but also lets in some false positives from noisy
+              auxiliary cues such as meters and curb color.
+            </p>
+          </div>
+
+          <h4>Threshold sweep on the aggregated score</h4>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="num">Threshold</th>
+                  <th class="num">Precision</th>
+                  <th class="num">Recall</th>
+                  <th class="num">F1</th>
+                  <th class="num">AUROC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="num">0.05</td>
+                  <td class="num">0.671</td>
+                  <td class="num">0.972</td>
+                  <td class="num">0.794</td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.10</td>
+                  <td class="num">0.711</td>
+                  <td class="num">0.966</td>
+                  <td class="num">0.819</td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.15</td>
+                  <td class="num">0.753</td>
+                  <td class="num">0.924</td>
+                  <td class="num"><strong>0.830</strong></td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.20</td>
+                  <td class="num">0.774</td>
+                  <td class="num">0.876</td>
+                  <td class="num">0.822</td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.25</td>
+                  <td class="num">0.800</td>
+                  <td class="num">0.800</td>
+                  <td class="num">0.800</td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.30</td>
+                  <td class="num">0.823</td>
+                  <td class="num">0.738</td>
+                  <td class="num">0.778</td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.40</td>
+                  <td class="num">0.878</td>
+                  <td class="num">0.545</td>
+                  <td class="num">0.672</td>
+                  <td class="num">0.820</td>
+                </tr>
+                <tr>
+                  <td class="num">0.50</td>
+                  <td class="num">0.946</td>
+                  <td class="num">0.483</td>
+                  <td class="num">0.639</td>
+                  <td class="num">0.820</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 8. Threshold sweep for the synthetic segment-level aggregation
+            score. Best F1 at threshold 0.15.
+          </p>
+
+          <p>
+            Best F1 occurs at threshold 0.15, the same general operating region
+            as the image-level sign detector. This reinforces the observation
+            that low-confidence detections should not be discarded too
+            aggressively &mdash; in this task, weak cues become reliable when
+            pooled over several views.
+          </p>
+
+          <p>
+            The practical interpretation is that segment-level aggregation is
+            not merely a post-processing trick. It changes the operating regime
+            of the system. Single-image inference asks each view to
+            independently contain enough evidence; aggregation lets the system
+            use the best available evidence from the local context. This is much
+            closer to the real-world structure of the task.
+          </p>
+
+          <!-- 1.7 MANUAL QUANTITATIVE -->
+          <h3 id="manual-quant">
+            1.7 Manual real-world segment scores
+            <span class="cue-tag cue-aggregation">Aggregation</span>
+          </h3>
+          <p>
+            To test whether the same behavior appears outside the synthetic
+            pseudo-segment setting, we manually collected a small real-world
+            dataset of <strong>six street segments</strong>, each containing
+            five nearby views from the same local curbside context (Google Maps
+            / Street View-style imagery). Only 30 images total &mdash; not a
+            statistically significant benchmark, but a useful qualitative
+            validation.
+          </p>
+
+          <p>
+            Manual construction is expensive: each segment requires identifying
+            a street with visible parking-related evidence, moving through
+            nearby views, saving images consistently, ensuring the views
+            correspond to the same local curbside context, and writing notes
+            about which cues are visible. We therefore collected six examples
+            covering different cue configurations rather than attempting to
+            build a large benchmark.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Segment</th>
+                  <th>Label</th>
+                  <th>Observed cue pattern</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>seg_000</td>
+                  <td><span class="tag tag-success">Positive</span></td>
+                  <td>
+                    Multiple parking signs visible across the five views,
+                    including a faint sign in one view. Tests whether
+                    aggregation increases confidence when the sign detector
+                    already has evidence.
+                  </td>
+                </tr>
+                <tr>
+                  <td>seg_001</td>
+                  <td><span class="tag tag-success">Positive</span></td>
+                  <td>
+                    Meter-only segment. Parking meters in a subset of views;
+                    sign evidence absent. Tests whether the meter cue can rescue
+                    a segment missed by a sign-only baseline.
+                  </td>
+                </tr>
+                <tr>
+                  <td>seg_002</td>
+                  <td><span class="tag tag-success">Positive</span></td>
+                  <td>
+                    Mixed-cue segment containing parking meter, parking-sign
+                    evidence, and yellow curb color. Tests whether heterogeneous
+                    cues support the same segment-level decision.
+                  </td>
+                </tr>
+                <tr>
+                  <td>seg_003</td>
+                  <td><span class="tag tag-success">Positive</span></td>
+                  <td>
+                    Yellow curb-color-only segment. Weak-cue case &mdash; no
+                    strong sign or meter evidence.
+                  </td>
+                </tr>
+                <tr>
+                  <td>seg_004</td>
+                  <td><span class="tag tag-success">Positive</span></td>
+                  <td>
+                    Yellow curb color plus one visible parking meter. Tests
+                    complementary cue fusion between meter and curb evidence.
+                  </td>
+                </tr>
+                <tr>
+                  <td>seg_005</td>
+                  <td><span class="tag tag-success">Positive</span></td>
+                  <td>
+                    Difficult failure case. Visible sign is not part of the
+                    detector's training distribution and resembles a
+                    non-standard / storefront sign more than the mapped MTSD
+                    parking-sign classes.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 9. Manually collected real-world segment examples.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Segment</th>
+                  <th class="num">Single</th>
+                  <th class="num">Sign max</th>
+                  <th class="num">Meter max</th>
+                  <th class="num">Curb max</th>
+                  <th class="num">Combined</th>
+                  <th class="num">Pred.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>seg_000</td>
+                  <td class="num">0.431</td>
+                  <td class="num">0.529</td>
+                  <td class="num">0.394</td>
+                  <td class="num">0.634</td>
+                  <td class="num">0.529</td>
+                  <td class="num"><span class="tag tag-success">1</span></td>
+                </tr>
+                <tr>
+                  <td>seg_001</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.722</td>
+                  <td class="num">0.359</td>
+                  <td class="num">0.433</td>
+                  <td class="num"><span class="tag tag-success">1</span></td>
+                </tr>
+                <tr>
+                  <td>seg_002</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.395</td>
+                  <td class="num">0.227</td>
+                  <td class="num">0.426</td>
+                  <td class="num">0.395</td>
+                  <td class="num"><span class="tag tag-success">1</span></td>
+                </tr>
+                <tr>
+                  <td>seg_003</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.148</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.407</td>
+                  <td class="num">0.163</td>
+                  <td class="num"><span class="tag tag-success">1</span></td>
+                </tr>
+                <tr>
+                  <td>seg_004</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.708</td>
+                  <td class="num">0.539</td>
+                  <td class="num">0.425</td>
+                  <td class="num"><span class="tag tag-success">1</span></td>
+                </tr>
+                <tr>
+                  <td>seg_005</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.000</td>
+                  <td class="num">0.093</td>
+                  <td class="num">0.037</td>
+                  <td class="num"><span class="tag tag-accent">0</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">
+            Table 10. Manual real-world segment results. Scores are maximum
+            segment-level cue scores. The combined score uses the same
+            weighted-max rule as the synthetic experiment.
+          </p>
+
+          <div class="callout callout-success">
+            <p class="mb-0">
+              Aggregation correctly identifies
+              <strong>five of six</strong> positive examples; the single-image
+              sign baseline only succeeds on <strong>seg_000</strong>.
+              Aggregation improves recall by allowing evidence to come from any
+              view and from auxiliary cues.
+            </p>
+          </div>
+
+          <p>
+            The annotated views for each segment &mdash; with overlaid sign
+            boxes, meter boxes, and curb mask &mdash; are gathered in Section 4
+            below.
+          </p>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- 2. VALIDATION PLOTS                                                  -->
+        <!-- ================================================================== -->
+        <section class="section" id="yolo-plots">
+          <h2 class="section-title">2. Validation plots</h2>
+          <p class="section-lead">
+            Standard YOLO validation curves and confusion matrices for the
+            parking-sign detector.
+          </p>
+
+          <h3 id="detection-curves">
+            2.1 Detection curves <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <div class="figure-grid cols-2">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="yolo-curves"
+                src="assets/images/BoxPR_curve.png"
+                alt="Precision-recall curve"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Precision&ndash;recall curve. mAP@50 ~0.54.
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="yolo-curves"
+                src="assets/images/BoxF1_curve.png"
+                alt="F1-confidence curve"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                F1&ndash;confidence curve. Best F1 at low confidence threshold.
+              </figcaption>
+            </figure>
+          </div>
+
+          <p>Two takeaways:</p>
+          <ul>
+            <li>
+              The precision&ndash;recall curve confirms moderate but useful
+              detection performance, with mAP@50 around 0.54.
+            </li>
+            <li>
+              The F1&ndash;confidence curve shows that the detector works best
+              at a relatively low confidence threshold &mdash; retaining weaker
+              detections matters.
+            </li>
+          </ul>
+
+          <div class="figure-grid cols-2">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="yolo-curves"
+                src="assets/images/BoxP_curve.png"
+                alt="Precision-confidence curve"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Precision&ndash;confidence curve.
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="yolo-curves"
+                src="assets/images/BoxR_curve.png"
+                alt="Recall-confidence curve"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Recall&ndash;confidence curve.
+              </figcaption>
+            </figure>
+          </div>
+
+          <p>
+            Precision rises with stricter thresholds, but recall drops rapidly
+            &mdash; another sign that strict single-image decision rules are not
+            ideal for this task.
+          </p>
+
+          <h3 id="confusion-mats">
+            2.2 Confusion matrices <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <div class="figure-grid cols-2">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="confusion"
+                src="assets/images/confusion_matrix.png"
+                alt="Raw confusion matrix"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Raw confusion matrix.
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="confusion"
+                src="assets/images/confusion_matrix_normalized.png"
+                alt="Normalized confusion matrix"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Normalized confusion matrix.
+              </figcaption>
+            </figure>
+          </div>
+          <p>
+            The detector still produces a meaningful number of false negatives,
+            consistent with the moderate recall values reported above. Future
+            gains are unlikely to come only from tightening the detector
+            threshold &mdash; combining evidence across views is the more
+            promising direction.
+          </p>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- 3. QUALITATIVE FINDINGS                                              -->
+        <!-- ================================================================== -->
+        <section class="section" id="qualitative">
+          <h2 class="section-title">
+            3. Qualitative findings &amp; error analysis
+          </h2>
+          <p class="section-lead">
+            A useful part of the project is not just the final numbers, but the
+            qualitative analysis of <em>why</em> the models succeed or fail.
+            This section walks through the most informative successes and
+            failures cue-by-cue.
+          </p>
+
+          <h3 id="scale-sens">
+            3.1 Resolution and scale sensitivity for parking signs
+            <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <p>
+            One of the clearest findings: the parking-sign detector is strongly
+            limited by object scale. We tested the same scene at different
+            effective scales:
+          </p>
+          <ul>
+            <li>
+              At <strong>imgsz=640</strong> on the zoomed-out image, the model
+              missed both parking signs.
+            </li>
+            <li>
+              At <strong>imgsz=960</strong>, the model detected one of the
+              signs.
+            </li>
+            <li>
+              At <strong>imgsz=1280</strong>, the model detected both signs.
+            </li>
+            <li>
+              On a manually zoomed-in crop, the model detected the signs
+              reliably even at imgsz=640.
+            </li>
+          </ul>
+
+          <p>
+            This is a strong confirmation of the dataset analysis: the detector
+            is <strong>resolution-limited rather than concept-limited</strong>.
+            The model has learned what parking signs look like; in wide street
+            scenes, signs are simply too small after image resizing for reliable
+            detection.
+          </p>
+
+          <div class="figure-grid cols-2">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seattle-resolution"
+                src="assets/images/seattle_original.jpg"
+                alt="Seattle original at imgsz=640"
+                loading="lazy"
+                data-caption="imgsz=640 — both signs missed"
+              />
+              <figcaption class="figure-caption">imgsz=640 (miss).</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seattle-resolution"
+                src="assets/images/seattle_original_960.jpg"
+                alt="Seattle original at imgsz=960"
+                loading="lazy"
+                data-caption="imgsz=960 — partial detection"
+              />
+              <figcaption class="figure-caption">
+                imgsz=960 (partial detection).
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seattle-resolution"
+                src="assets/images/seattle_original_1280.jpg"
+                alt="Seattle original at imgsz=1280"
+                loading="lazy"
+                data-caption="imgsz=1280 — both signs detected"
+              />
+              <figcaption class="figure-caption">
+                imgsz=1280 (both signs detected).
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seattle-resolution"
+                src="assets/images/seattle_original_manually_zoomed.jpg"
+                alt="Seattle manually zoomed"
+                loading="lazy"
+                data-caption="Manually zoomed at imgsz=640 — full detection"
+              />
+              <figcaption class="figure-caption">
+                Manually zoomed at imgsz=640 (full detection).
+              </figcaption>
+            </figure>
+          </div>
+          <p class="figure-caption">
+            Detection results for a Seattle scene at different effective scales.
+            Detection improves as the parking signs occupy more pixels in the
+            model input.
+            <em>Click any image to step through them in a slideshow.</em>
+          </p>
+
+          <p>
+            This finding directly supports the project motivation. If a single
+            view is zoomed out, the cue may be missed; if another nearby view
+            captures the sign more closely, the cue may become detectable.
+          </p>
+
+          <h3 id="partial-loc">
+            3.2 Partial localization of composite signs
+            <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <p>
+            The detector often boxes only the most salient sub-part of a
+            parking-sign assembly &mdash; the blue "P" symbol or a no-parking
+            icon &mdash; rather than the full stacked signboard including time
+            restrictions.
+          </p>
+          <ol>
+            <li>
+              MTSD is a traffic-sign dataset, so annotations are naturally
+              sign-centric rather than designed for full sign-assembly
+              understanding.
+            </li>
+            <li>
+              Text-heavy restriction plates are smaller and more variable than
+              the main symbol panel, making them much harder to learn.
+            </li>
+          </ol>
+
+          <p>
+            For the present task this is acceptable because the requirement is
+            <strong>parking-cue presence detection</strong>, not full OCR-based
+            rule parsing. It is, however, a clear limitation: the detector is
+            suitable for cue detection but not yet for complete parking-rule
+            understanding.
+          </p>
+
+          <div class="figure-grid cols-2">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="manual-qual"
+                src="assets/images/img_2_casa.jpg"
+                alt="Manual qualitative example, casa"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Successful detection on a manually collected image.
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="manual-qual"
+                src="assets/images/seattle_2.jpg"
+                alt="Seattle qualitative example"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">
+                Tendency to localize the "P" sub-sign rather than the full
+                assembly.
+              </figcaption>
+            </figure>
+          </div>
+
+          <h3 id="small-image">
+            3.3 The non-intuitive small-image case
+            <span class="cue-tag cue-sign">Sign</span>
+          </h3>
+          <p>
+            During qualitative evaluation we observed a non-intuitive behavior:
+            in certain cases, <strong>reducing</strong> the input resolution
+            (e.g. from 640 to 160) <em>improved</em> the detection of distant
+            parking signs.
+          </p>
+
+          <div class="figure-grid cols-2">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="state-st"
+                src="assets/images/img_6_state_st_high_res_miss.jpg"
+                alt="High-resolution miss"
+                loading="lazy"
+                data-caption="imgsz=1280 — sign missed"
+              />
+              <figcaption class="figure-caption">
+                Higher resolution (imgsz=1280): sign missed.
+              </figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="state-st"
+                src="assets/images/img_6_state_st_low_res_detect.jpg"
+                alt="Low-resolution detect"
+                loading="lazy"
+                data-caption="imgsz=160 — sign detected"
+              />
+              <figcaption class="figure-caption">
+                Lower resolution (imgsz=160): same sign detected.
+              </figcaption>
+            </figure>
+          </div>
+
+          <p>
+            YOLO operates on fixed-size inputs and relies on hierarchical
+            feature maps for multi-scale detection, so detection performance is
+            strongly tied to the relative size of the object within the resized
+            image. At higher resolutions, distant parking signs occupy only a
+            small number of pixels relative to the full image; after multiple
+            downsampling operations they become extremely small in deep feature
+            maps. When the input is resized to a smaller resolution, the
+            background is compressed and the object occupies a
+            <em>larger</em> relative portion of the image &mdash; effectively
+            boosting its prominence in deeper feature maps, making detection
+            easier.
+          </p>
+
+          <figure class="figure">
+            <img
+              class="figure-zoom"
+              src="assets/images/category_crop_collage_train_seed42.jpg"
+              alt="Training data category samples"
+              loading="lazy"
+            />
+            <figcaption class="figure-caption">
+              Sample parking-sign crops from training data. Large variation in
+              size, appearance, and text content contributes to scale
+              sensitivity and detection bias.
+            </figcaption>
+          </figure>
+
+          <p>
+            This is consistent with the dataset analysis: many parking signs in
+            the training data are small and low-resolution, especially in wide
+            street-view images. The model learns to detect parking signs at
+            <em>specific relative scales</em>, which makes detection sensitive
+            to object scale and image resolution. Practical implications:
+          </p>
+          <ul>
+            <li>
+              Detection performance is sensitive to object scale and image
+              resolution.
+            </li>
+            <li>
+              Text-heavy signs are particularly affected due to their dependence
+              on fine-grained visual details.
+            </li>
+            <li>
+              A single fixed input resolution may not be sufficient for robust
+              detection across all scenarios.
+            </li>
+          </ul>
+
+          <p>
+            To address these limitations, several improvements are natural to
+            consider:
+          </p>
+          <ul>
+            <li>
+              Higher-resolution inference (e.g. 960 or 1280) to better capture
+              small objects.
+            </li>
+            <li>
+              Multi-scale inference to improve robustness across object sizes.
+            </li>
+            <li>
+              Tiled or patch-based inference for better small-object detection.
+            </li>
+            <li>
+              OCR-based methods in future work for better handling of text-heavy
+              parking signs.
+            </li>
+          </ul>
+
+          <p>
+            Overall, this experiment highlights the importance of object scale
+            in detection performance and provides valuable insight into the
+            limitations of purely visual detection approaches for parking-sign
+            understanding.
+          </p>
+
+          <h3 id="meter-qual">
+            3.4 Qualitative parking-meter findings
+            <span class="cue-tag cue-meter">Meter</span>
+          </h3>
+          <p>
+            On close, clear images, the COCO-pretrained detector can correctly
+            identify parking meters. In realistic street-view scenes &mdash;
+            meters small relative to the full image, partially occluded, or
+            visually similar to signposts and other narrow vertical street
+            furniture &mdash; the model struggles much more.
+          </p>
+
+          <p>
+            This behavior matches the quantitative results: image-level recall
+            shows transferable signal, but low precision indicates the model
+            frequently mistakes pole-like objects for parking meters. Taken
+            together, qualitative meter results match the quantitative findings:
+            parking-meter detection is useful as a <strong>partial cue</strong>,
+            but currently too noisy to be relied on by itself.
+          </p>
+
+          <figure class="figure">
+            <img
+              class="figure-zoom"
+              src="assets/images/park_meter_madison.jpg"
+              alt="Parking meter detection in Madison"
+              loading="lazy"
+            />
+            <figcaption class="figure-caption">
+              Successful zero-shot parking-meter detection on a manually
+              collected nighttime close-view scene from Madison.
+            </figcaption>
+          </figure>
+
+          <h3 id="curb-seg-qual">
+            3.5 Qualitative curb segmentation findings
+            <span class="cue-tag cue-curb">Curb</span>
+          </h3>
+          <p>
+            The curb segmentation model produces a useful but imperfect signal.
+            In many scenes it correctly identifies the curb boundary and
+            captures enough structure for downstream analysis. Unlike parking
+            signs or meters, curb regions are long, thin, and often visually
+            weak &mdash; predicted masks are frequently
+            <strong>sparse and fragmented</strong> rather than dense, continuous
+            regions. This is not necessarily a failure for our use case; since
+            the downstream goal is to recover a coarse curb-related cue rather
+            than a pixel-perfect geometric model, even partial mask recovery can
+            be sufficient if the predicted pixels are located on the true curb
+            boundary.
+          </p>
+
+          <p>
+            The model exhibits a recurring failure mode on
+            <strong>painted or low-elevation curbs</strong>, which can look
+            visually similar to flat road paint or lane markings rather than a
+            structurally distinct boundary. The model relies strongly on
+            geometric and shading cues and is less robust when the curb is
+            visually smooth, uniformly painted, or weakly separated from
+            adjacent surfaces.
+          </p>
+
+          <p>
+            The painted-curb failure shown below is missed because it lacks
+            strong geometric separation from the road surface. This is likely
+            influenced by dataset bias: many training examples emphasize raised
+            curbs with clear boundary structure. As a result the model relies
+            heavily on geometric edge cues rather than learning a fully semantic
+            notion of curb appearance. When the curb is flat, painted, or
+            visually similar to road markings &mdash; especially in zoomed-in
+            views where contextual cues are reduced &mdash; the model struggles
+            to distinguish it from surrounding surfaces.
+          </p>
+
+          <figure class="figure">
+            <img
+              class="figure-zoom"
+              src="assets/images/curb_seg_good_example.jpg"
+              alt="Curb segmentation good example"
+              loading="lazy"
+            />
+            <figcaption class="figure-caption">
+              Good qualitative curb segmentation. The model captures curb
+              location, but the prediction remains thin and fragmented rather
+              than forming a dense continuous region.
+            </figcaption>
+          </figure>
+
+          <figure class="figure">
+            <img
+              class="figure-zoom"
+              src="assets/images/curb_seg_failure_green_curb.jpg"
+              alt="Curb segmentation failure: painted curb"
+              loading="lazy"
+            />
+            <figcaption class="figure-caption">
+              Failure case: a painted curb missed because it lacks strong
+              geometric separation from the road surface.
+            </figcaption>
+          </figure>
+
+          <h3 id="curb-color-qual">
+            3.6 Qualitative curb color findings
+            <span class="cue-tag cue-curb">Curb</span>
+          </h3>
+          <p>
+            The curb color stage produced some of the most informative
+            qualitative findings. A straightforward initial approach &mdash;
+            classifying color using all pixels inside the predicted curb mask
+            &mdash; led to substantial contamination from nearby structures such
+            as crosswalk stripes, painted road markings, and adjacent asphalt.
+            White road markings in particular caused the system to over-predict
+            <code>white</code> even when the curb itself was not white.
+          </p>
+
+          <p>
+            To address this, we changed the pipeline to use
+            <strong>boundary-based color extraction</strong>. Instead of taking
+            all predicted mask pixels, we compute the edges of the predicted
+            curb mask and use only those boundary pixels for HSV-based color
+            analysis. This significantly reduces contamination from nearby
+            structures such as crosswalk markings and lane paint, and produces
+            more conservative but more reliable curb-color predictions.
+          </p>
+
+          <p>
+            We also found that color prediction requires explicit
+            <strong>uncertainty handling</strong>. In many realistic scenes, the
+            curb mask contains a mixture of red curb paint, white crosswalk
+            markings, gray asphalt, and lighting variation; the color
+            distribution becomes multi-modal rather than dominated by a single
+            class. Instead of forcing a hard label, we introduced a
+            confidence-margin rule: a color is accepted only if it has both
+            sufficient absolute confidence and a sufficient margin over the
+            second-best color. Otherwise, the prediction is labeled
+            <code>unknown</code>. This made the final output more conservative,
+            but also more trustworthy.
+          </p>
+
+          <figure class="figure">
+            <img
+              class="figure-zoom"
+              src="assets/images/curb_color_failure_unknown.png"
+              alt="Curb color unknown failure"
+              loading="lazy"
+            />
+            <figcaption class="figure-caption">
+              A representative failure case. The curb is visibly red, but the
+              predicted mask also overlaps nearby white and gray regions. The
+              conservative decision rule labels the case as
+              <code>unknown</code> rather than forcing an incorrect dominant
+              color &mdash; a useful project-level lesson: for curb color,
+              <strong>precision matters more than forcing coverage</strong>.
+            </figcaption>
+          </figure>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- 4. ANNOTATED REAL-WORLD SEGMENTS                                     -->
+        <!-- ================================================================== -->
+        <section class="section" id="annotated">
+          <h2 class="section-title">
+            4. Annotated real-world segments
+            <span class="cue-tag cue-aggregation">Aggregation</span>
+          </h2>
+          <p class="section-lead">
+            Annotated outputs from the manual segment visualization script. Each
+            segment is shown as multiple nearby views with overlaid detections
+            for parking signs, parking meters, and the curb segmentation mask.
+            <strong>Click any image to open the slideshow</strong> &mdash; use
+            the arrow buttons or <span class="kbd">&larr;</span> /
+            <span class="kbd">&rarr;</span> keys to step through the five views
+            in a single segment.
+          </p>
+
+          <!-- 4.1 seg_001 -->
+          <h3 id="seg-001">4.1 seg_001 &mdash; meter-only success</h3>
+          <p>
+            Sign 0.000, Meter 0.722, Curb 0.359 &rarr;
+            <strong>Combined 0.433</strong>. The sign detector contributes
+            nothing; the parking-meter cue is strong enough that aggregation
+            correctly classifies the segment as positive after the 0.6
+            down-weighting.
+          </p>
+          <div class="figure-grid cols-5">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_001"
+                data-caption="seg_001 view 0 — meter detector fires"
+                src="assets/images/figures/seg_001_img_0_annotated.jpg"
+                alt="seg_001 view 0"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 0</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_001"
+                data-caption="seg_001 view 1"
+                src="assets/images/figures/seg_001_img_1_annotated.jpg"
+                alt="seg_001 view 1"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 1</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_001"
+                data-caption="seg_001 view 2"
+                src="assets/images/figures/seg_001_img_2_annotated.jpg"
+                alt="seg_001 view 2"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 2</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_001"
+                data-caption="seg_001 view 3"
+                src="assets/images/figures/seg_001_img_3_annotated.jpg"
+                alt="seg_001 view 3"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 3</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_001"
+                data-caption="seg_001 view 4"
+                src="assets/images/figures/seg_001_img_4_annotated.jpg"
+                alt="seg_001 view 4"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 4</figcaption>
+            </figure>
+          </div>
+          <p class="figure-caption">
+            Manual segment seg_001. Meter-only segment &mdash; the sign detector
+            does not fire, but the parking-meter cue is strong enough for
+            segment-level aggregation to correctly classify it as positive.
+          </p>
+
+          <!-- 4.2 seg_003 -->
+          <h3 id="seg-003">4.2 seg_003 &mdash; curb-color borderline</h3>
+          <p>
+            Sign 0.148, Meter 0.000, Curb 0.407 &rarr;
+            <strong>Combined 0.163</strong>. Just above the 0.15 threshold
+            &mdash; appropriately uncertain. Curb color is meaningful but
+            indirect; it should not dominate the final decision unless there is
+            enough evidence. The low margin reflects uncertainty rather than
+            overconfidence.
+          </p>
+          <div class="figure-grid cols-5">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_003"
+                data-caption="seg_003 view 0 — yellow curb visible"
+                src="assets/images/figures/seg_003_img_0_annotated.jpg"
+                alt="seg_003 view 0"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 0</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_003"
+                data-caption="seg_003 view 1"
+                src="assets/images/figures/seg_003_img_1_annotated.jpg"
+                alt="seg_003 view 1"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 1</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_003"
+                data-caption="seg_003 view 2"
+                src="assets/images/figures/seg_003_img_2_annotated.jpg"
+                alt="seg_003 view 2"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 2</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_003"
+                data-caption="seg_003 view 3"
+                src="assets/images/figures/seg_003_img_3_annotated.jpg"
+                alt="seg_003 view 3"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 3</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_003"
+                data-caption="seg_003 view 4"
+                src="assets/images/figures/seg_003_img_4_annotated.jpg"
+                alt="seg_003 view 4"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 4</figcaption>
+            </figure>
+          </div>
+          <p class="figure-caption">
+            Manual segment seg_003. Curb-color-only example &mdash; a borderline
+            but successful case. The low margin is appropriate because curb
+            color is an indirect cue and is intentionally down-weighted.
+          </p>
+
+          <!-- 4.3 seg_004 -->
+          <h3 id="seg-004">4.3 seg_004 &mdash; complementary cue fusion</h3>
+          <p>
+            Sign 0.000, Meter 0.708, Curb 0.539 &rarr;
+            <strong>Combined 0.425</strong>. The sign detector contributes
+            nothing, but the meter and curb modules both produce useful signals.
+            The segment is correctly recovered because aggregation combines
+            auxiliary cues instead of requiring a sign detection.
+          </p>
+          <div class="figure-grid cols-5">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_004"
+                data-caption="seg_004 view 0"
+                src="assets/images/figures/seg_004_img_0_annotated.jpg"
+                alt="seg_004 view 0"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 0</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_004"
+                data-caption="seg_004 view 1"
+                src="assets/images/figures/seg_004_img_1_annotated.jpg"
+                alt="seg_004 view 1"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 1</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_004"
+                data-caption="seg_004 view 2"
+                src="assets/images/figures/seg_004_img_2_annotated.jpg"
+                alt="seg_004 view 2"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 2</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_004"
+                data-caption="seg_004 view 3 — meter detected"
+                src="assets/images/figures/seg_004_img_3_annotated.jpg"
+                alt="seg_004 view 3"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 3</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_004"
+                data-caption="seg_004 view 4"
+                src="assets/images/figures/seg_004_img_4_annotated.jpg"
+                alt="seg_004 view 4"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 4</figcaption>
+            </figure>
+          </div>
+          <p class="figure-caption">
+            Manual segment seg_004. Combines meter and curb-color evidence. The
+            sign detector contributes no signal, but aggregation succeeds via
+            complementary auxiliary cues.
+          </p>
+
+          <!-- 4.4 seg_005 -->
+          <h3 id="seg-005">4.4 seg_005 &mdash; out-of-distribution failure</h3>
+          <p>
+            All cues near zero (combined 0.037). At first this looked like an
+            image-quality issue, but closer inspection shows a more meaningful
+            failure mode: the visible sign is outside the detector's training
+            distribution. The system was trained on mapped MTSD
+            parking-regulation signs, but the visible sign resembles a
+            non-standard storefront or local sign. With no view containing a
+            sign matching the trained detector's visual vocabulary, and no
+            strong meter or curb backup cues, aggregation cannot recover the
+            segment.
+            <strong
+              >Aggregation can compensate for sparse visibility, but it cannot
+              compensate for a detector that lacks the relevant visual
+              concept.</strong
+            >
+          </p>
+          <div class="figure-grid cols-5">
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_005"
+                data-caption="seg_005 view 0 — out-of-distribution sign"
+                src="assets/images/figures/seg_005_img_0_annotated.jpg"
+                alt="seg_005 view 0"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 0</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_005"
+                data-caption="seg_005 view 1"
+                src="assets/images/figures/seg_005_img_1_annotated.jpg"
+                alt="seg_005 view 1"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 1</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_005"
+                data-caption="seg_005 view 2"
+                src="assets/images/figures/seg_005_img_2_annotated.jpg"
+                alt="seg_005 view 2"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 2</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_005"
+                data-caption="seg_005 view 3"
+                src="assets/images/figures/seg_005_img_3_annotated.jpg"
+                alt="seg_005 view 3"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 3</figcaption>
+            </figure>
+            <figure class="figure">
+              <img
+                class="figure-zoom"
+                data-gallery="seg_005"
+                data-caption="seg_005 view 4"
+                src="assets/images/figures/seg_005_img_4_annotated.jpg"
+                alt="seg_005 view 4"
+                loading="lazy"
+              />
+              <figcaption class="figure-caption">View 4</figcaption>
+            </figure>
+          </div>
+          <p class="figure-caption">
+            Manual segment seg_005. The visible sign is outside the training
+            distribution, and there are no strong auxiliary cues. Aggregation
+            cannot recover missing visual concepts.
+          </p>
+
+          <!-- 4.5 ADDITIONAL SEGMENTS -->
+          <h3 id="additional-segments">4.5 Additional segments</h3>
+          <p>
+            Annotated views for the other two manual segments (seg_000 and
+            seg_002).
+          </p>
+
+          <div class="card">
+            <h4 class="mt-0">
+              seg_000 &mdash; sign-only positive (single-image baseline also
+              succeeds)
+            </h4>
+            <p>
+              Sign 0.529, Meter 0.394, Curb 0.634 &rarr;
+              <strong>Combined 0.529</strong>. Multiple parking signs visible
+              across the five views. This tests whether aggregation increases
+              confidence when the sign detector already has evidence.<br />
+              <b>Note</b>: The building pillar detected as a meter in view 2,
+              which is a common failure mode for the parking-meter detector and
+              a good example of why meter evidence should be down-weighted in
+              aggregation.
+            </p>
+
+            <div class="figure-grid cols-5">
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_000"
+                  data-caption="seg_000 view 0"
+                  src="assets/images/figures/seg_000_img_0_annotated.jpg"
+                  alt="seg_000 view 0"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 0</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_000"
+                  data-caption="seg_000 view 1"
+                  src="assets/images/figures/seg_000_img_1_annotated.jpg"
+                  alt="seg_000 view 1"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 1</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_000"
+                  data-caption="seg_000 view 2"
+                  src="assets/images/figures/seg_000_img_2_annotated.jpg"
+                  alt="seg_000 view 2"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 2</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_000"
+                  data-caption="seg_000 view 3"
+                  src="assets/images/figures/seg_000_img_3_annotated.jpg"
+                  alt="seg_000 view 3"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 3</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_000"
+                  data-caption="seg_000 view 4"
+                  src="assets/images/figures/seg_000_img_4_annotated.jpg"
+                  alt="seg_000 view 4"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 4</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1rem">
+            <h4 class="mt-0">seg_002 &mdash; mixed-cue segment</h4>
+            <p>
+              Sign 0.395, Meter 0.227, Curb 0.426 &rarr;
+              <strong>Combined 0.395</strong>. Mixed-cue segment containing
+              parking meter, parking-sign evidence, and yellow curb color. Tests
+              whether heterogeneous cues support the same segment-level
+              decision.
+            </p>
+
+            <div class="figure-grid cols-5">
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_002"
+                  data-caption="seg_002 view 0"
+                  src="assets/images/figures/seg_002_img_0_annotated.jpg"
+                  alt="seg_002 view 0"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 0</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_002"
+                  data-caption="seg_002 view 1"
+                  src="assets/images/figures/seg_002_img_1_annotated.jpg"
+                  alt="seg_002 view 1"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 1</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_002"
+                  data-caption="seg_002 view 2"
+                  src="assets/images/figures/seg_002_img_2_annotated.jpg"
+                  alt="seg_002 view 2"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 2</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_002"
+                  data-caption="seg_002 view 3"
+                  src="assets/images/figures/seg_002_img_3_annotated.jpg"
+                  alt="seg_002 view 3"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 3</figcaption>
+              </figure>
+              <figure class="figure">
+                <img
+                  class="figure-zoom"
+                  data-gallery="seg_002"
+                  data-caption="seg_002 view 4"
+                  src="assets/images/figures/seg_002_img_4_annotated.jpg"
+                  alt="seg_002 view 4"
+                  loading="lazy"
+                />
+                <figcaption class="figure-caption">View 4</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>
+          <strong>CS 766 &middot; Spring 2026</strong> &middot; University of
+          Wisconsin&ndash;Madison<br />
+          Chirag Jain &middot; Ritik Singh
+        </div>
+        <div>
+          <a href="documents.html">Documents</a> &middot;
+          <a href="code.html">Code</a> &middot;
+          <a
+            href="assets/pdfs/cs766_report_final.pdf"
+            target="_blank"
+            rel="noopener"
+            >Final Report PDF</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

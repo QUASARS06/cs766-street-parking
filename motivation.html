@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Motivation &middot; Street Parking Presence Inference</title>
+<meta name="description" content="Motivation, problem statement, and prior work for street parking presence inference from street-level imagery." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-brand-tag">CS 766</span>
+      <span class="nav-brand-title">Street Parking Presence Inference</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="motivation.html">Motivation</a></li>
+      <li><a href="approach.html">Approach</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="conclusion.html">Conclusion</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="code.html">Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="breadcrumb">Project &middot; Motivation</p>
+    <h1>Why infer street parking presence?</h1>
+    <p>Street parking is governed by sparse, viewpoint-dependent curbside cues. Single-image classification is brittle. We argue that segment-level multi-cue inference is the right framing for this problem.</p>
+  </div>
+</header>
+
+<main>
+<div class="container container-narrow">
+
+<nav class="toc" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol>
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#why">Why it matters</a></li>
+    <li><a href="#prior">Prior work and the gap</a></li>
+    <li><a href="#approach-overview">Our framing</a></li>
+    <li><a href="#why-better">Why aggregation helps</a></li>
+  </ol>
+</nav>
+
+<section class="section" id="problem">
+  <h2 class="section-title">The problem</h2>
+  <p>Street parking availability is governed by distributed curbside cues such as <strong>parking signs, parking meters and pay stations, and curb markings</strong>. These cues are often sparse, viewpoint-dependent, and frequently occluded. As a result, single-image classification of "is street parking present?" is brittle &mdash; a negative prediction can simply mean the relevant cue happens to be outside the camera field of view in that frame.</p>
+
+  <p>We propose to infer street parking presence at the <strong>street-segment level</strong> using a two-stage pipeline:</p>
+  <ol>
+    <li><strong>Image-level cue detection.</strong> Decide whether a single image contains parking signs, parking meters, and curb-related cues (curb presence, appearance, and curb color where feasible).</li>
+    <li><strong>Segment-level aggregation.</strong> Cluster nearby street-level images into a segment and aggregate cue evidence across images to infer whether the segment supports on-street parking.</li>
+  </ol>
+</section>
+
+<section class="section" id="why">
+  <h2 class="section-title">Why it matters</h2>
+  <p>Street parking plays a meaningful role in urban mobility and traffic congestion. A substantial fraction of urban congestion is attributable to drivers cruising in search of parking, with the usual downstream effects on fuel consumption, emissions, and travel time. Despite this, reliable and up-to-date information about street parking infrastructure is frequently incomplete, inconsistent, or maintained manually by individual municipalities.</p>
+
+  <p>Curbside space also has to support competing uses &mdash; parking, loading zones, ride-hailing pick-up/drop-off, and emergency access. As cities modernize curb management policies, there is a growing need for scalable, automated tools that can monitor and interpret curbside conditions from visual data. Vision-based curb analytics has recently been used for curb-lane monitoring and illegal-parking impact estimation, demonstrating the feasibility and societal relevance of computer vision for curbside analysis.</p>
+
+  <div class="callout">
+    <p class="mb-0">From a computer vision perspective, the problem is compelling because parking-related cues are <strong>small, sparse, and viewpoint-dependent</strong>. Relevant evidence is naturally distributed across multiple images along a street segment. This pushes the task toward multi-view reasoning and cue aggregation rather than single-image classification.</p>
+  </div>
+</section>
+
+<section class="section" id="prior">
+  <h2 class="section-title">Prior work and the gap</h2>
+  <p>There is limited direct work on <em>street parking presence inference</em> from street-level imagery. Most related work falls into three buckets.</p>
+
+  <h3>(A) Parking sign detection and recognition</h3>
+  <p>A handful of works study parking-sign detection and text recognition. Chau et al. focus on real-time parking-sign and symbol detection but note limited public data and the inherent complexity of full sign understanding. Jiang's MS thesis presents an end-to-end pipeline (detection + recognition + trust system) for street parking signs. Zhong et al. target parking-sign text recognition with a dictionary-guided approach. These works are <strong>sign-centric</strong> and typically assume that the sign is observable in the frame.</p>
+
+  <h3>(B) On-street parking space and occupancy localization</h3>
+  <p>Other work focuses on detecting parking spaces or estimating occupancy rather than inferring whether parking is permitted/instrumented on a segment. Garta et al. detect on-street parking spaces using YOLO models and recommend spaces via KD-tree search. Morell et al. localize on-street parking spaces from low-quality public-camera imagery using deep learning and geometric postprocessing. These pipelines answer "where are available spaces?" rather than "does this street segment support street parking?"</p>
+
+  <h3>(C) Curb monitoring and curbside analytics</h3>
+  <p>Curb-usage and illegal-parking impact estimation work supports the importance of curbside perception, but it is typically framed around activity or impact estimation rather than segment-level parking presence inference.</p>
+
+  <div class="callout callout-warn">
+    <p class="mb-0"><strong>The gap.</strong> Prior work that directly addresses street parking is mostly sign-centric and often requires custom data collection. There is no widely-adopted benchmark dataset or end-to-end approach for <em>street-segment</em> parking presence inference that integrates multiple cues with multi-view aggregation. Lack of suitable datasets is, itself, a major part of the problem.</p>
+  </div>
+</section>
+
+<section class="section" id="approach-overview">
+  <h2 class="section-title">Our framing</h2>
+  <p>We do both:</p>
+
+  <ol>
+    <li><strong>Baseline (re-implementation).</strong> A modern detector for parking-sign presence, aligned with the sign-centric pipelines in the literature.</li>
+    <li><strong>Proposed approach (extension).</strong> Move beyond sign-only inference by combining:
+      <ul>
+        <li><strong>Multi-cue detection</strong> &mdash; parking signs, parking meters/pay stations, and curb-related cues (presence, appearance, color where feasible).</li>
+        <li><strong>Segment aggregation</strong> &mdash; cluster images by geographic proximity (or capture sequence) and aggregate cue evidence to infer street-segment parking presence.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <p>This reframes the task as <strong>multi-view evidence integration</strong>, closer to a multiple-instance inference problem: a segment can be positive even if many individual images do not contain visible cues.</p>
+</section>
+
+<section class="section" id="why-better">
+  <h2 class="section-title">Why aggregation should help</h2>
+
+  <h3>Why prior approaches are insufficient</h3>
+  <p>Sign-centric methods fail when signs are occluded, distant, blurred, or simply not in frame. Parking-space localization solves a different objective (slot/occupancy localization), often relying on fixed cameras and gap/space cues rather than curbside infrastructure. Curb monitoring work demonstrates feasibility and importance but does not directly produce segment-level parking presence judgments from distributed cues.</p>
+
+  <h3>Why multi-cue + multi-view should work</h3>
+  <p>Street parking presence is fundamentally a <strong>segment-level</strong> property. Cue redundancy (signs, meters, curb cues) plus multi-view aggregation should improve robustness: even if a single image lacks visible evidence, nearby images along the same segment may contain a clear sign or meter. Aggregation directly targets the dominant failure mode of single-image sign-centric systems &mdash; missing evidence due to viewpoint and sparsity.</p>
+
+  <div class="callout callout-note">
+    <p class="mb-0"><strong>Feasibility caveat (proposal-stage).</strong> Curb color was flagged as potentially helpful but dataset- and time-dependent. We treated it as a stretch goal and kept curb presence/appearance cues in scope. The final implementation includes a conservative HSV-based curb color stage; see <a href="approach.html#curb">Approach &rsaquo; Curb segmentation &amp; color</a>.</p>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<section class="section">
+  <p class="muted">Sources for this page: project proposal (Feb 2026) and the introduction of the final report (April 2026). The full proposal &mdash; including references and the originally planned timeline &mdash; is available on the <a href="documents.html">Documents</a> page.</p>
+</section>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <strong>CS 766 &middot; Spring 2026</strong> &middot; University of Wisconsin&ndash;Madison<br />
+      Chirag Jain &middot; Ritik Singh
+    </div>
+    <div>
+      <a href="documents.html">Documents</a> &middot;
+      <a href="code.html">Code</a> &middot;
+      <a href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report PDF</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Documents &middot; Street Parking Presence Inference</title>
+<meta name="description" content="Project proposal, midterm report, and final report PDFs for the CS 766 street parking presence inference project." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+<style>
+  .doc-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .doc-tab {
+    padding: 0.65rem 1.05rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    cursor: pointer;
+    color: var(--color-muted);
+    transform: translateY(1px);
+  }
+  .doc-tab:hover { color: var(--color-primary); }
+  .doc-tab.active {
+    background: white;
+    border-color: var(--color-border);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  .doc-panel { display: none; }
+  .doc-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-brand-tag">CS 766</span>
+      <span class="nav-brand-title">Street Parking Presence Inference</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="motivation.html">Motivation</a></li>
+      <li><a href="approach.html">Approach</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="conclusion.html">Conclusion</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="code.html">Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="breadcrumb">Project &middot; Documents</p>
+    <h1>Project documents</h1>
+    <p>The proposal, midterm report, and final report &mdash; all viewable in-browser and downloadable as PDF.</p>
+  </div>
+</header>
+
+<main>
+<div class="container">
+
+<div class="doc-tabs" role="tablist">
+  <button class="doc-tab active" role="tab" data-tab="final" aria-selected="true">Final Report</button>
+  <button class="doc-tab" role="tab" data-tab="midterm" aria-selected="false">Midterm Report</button>
+  <button class="doc-tab" role="tab" data-tab="proposal" aria-selected="false">Project Proposal</button>
+</div>
+
+<!-- Final Report -->
+<section class="doc-panel active" id="panel-final" role="tabpanel">
+  <div class="pdf-actions">
+    <a class="btn" href="assets/pdfs/cs766_report_final.pdf" download>Download PDF</a>
+    <a class="btn btn-secondary" href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Open in new tab</a>
+    <span class="pdf-meta">April 2026 &middot; Final report</span>
+  </div>
+  <p class="muted small">If the PDF doesn't render below (e.g. on some mobile browsers), use the buttons above.</p>
+  <iframe class="pdf-frame" src="assets/pdfs/cs766_report_final.pdf#view=FitH" title="Final Report"></iframe>
+</section>
+
+<!-- Midterm -->
+<section class="doc-panel" id="panel-midterm" role="tabpanel">
+  <div class="pdf-actions">
+    <a class="btn" href="assets/pdfs/cs766_midterm_report.pdf" download>Download PDF</a>
+    <a class="btn btn-secondary" href="assets/pdfs/cs766_midterm_report.pdf" target="_blank" rel="noopener">Open in new tab</a>
+    <span class="pdf-meta">March 2026 &middot; Midterm progress report</span>
+  </div>
+  <p class="muted small">Mid-project progress update covering the parking-sign baseline, dataset construction, and initial single-image vs. aggregated experiments.</p>
+  <iframe class="pdf-frame" src="assets/pdfs/cs766_midterm_report.pdf#view=FitH" title="Midterm Report"></iframe>
+</section>
+
+<!-- Proposal -->
+<section class="doc-panel" id="panel-proposal" role="tabpanel">
+  <div class="pdf-actions">
+    <a class="btn" href="assets/pdfs/cs766_project_proposal.pdf" download>Download PDF</a>
+    <a class="btn btn-secondary" href="assets/pdfs/cs766_project_proposal.pdf" target="_blank" rel="noopener">Open in new tab</a>
+    <span class="pdf-meta">February 2026 &middot; Project proposal</span>
+  </div>
+  <p class="muted small">Original proposal: motivation, prior-work survey, planned approach, evaluation plan, and timeline.</p>
+  <iframe class="pdf-frame" src="assets/pdfs/cs766_project_proposal.pdf#view=FitH" title="Project Proposal"></iframe>
+</section>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <strong>CS 766 &middot; Spring 2026</strong> &middot; University of Wisconsin&ndash;Madison<br />
+      Chirag Jain &middot; Ritik Singh
+    </div>
+    <div>
+      <a href="documents.html">Documents</a> &middot;
+      <a href="code.html">Code</a> &middot;
+      <a href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report PDF</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script>
+  (function () {
+    const tabs = document.querySelectorAll('.doc-tab');
+    const panels = document.querySelectorAll('.doc-panel');
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.tab;
+        tabs.forEach((t) => {
+          const isActive = t === tab;
+          t.classList.toggle('active', isActive);
+          t.setAttribute('aria-selected', String(isActive));
+        });
+        panels.forEach((p) => {
+          p.classList.toggle('active', p.id === 'panel-' + id);
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

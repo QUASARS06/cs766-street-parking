@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conclusion &middot; Street Parking Presence Inference</title>
+<meta name="description" content="Conclusion and future work for the multi-cue street-parking inference project, including VLM-based directions." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-brand-tag">CS 766</span>
+      <span class="nav-brand-title">Street Parking Presence Inference</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="motivation.html">Motivation</a></li>
+      <li><a href="approach.html">Approach</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="conclusion.html">Conclusion</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="code.html">Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="breadcrumb">Project &middot; Conclusion</p>
+    <h1>Conclusion and future work</h1>
+    <p>The project's bottom line, headline numbers in one place, and the directions we'd push next &mdash; including how a VLM could re-shape this pipeline.</p>
+  </div>
+</header>
+
+<main>
+<div class="container container-narrow">
+
+<nav class="toc" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#headline">Headline numbers</a></li>
+    <li><a href="#takeaways">Key takeaways</a></li>
+    <li><a href="#future">Future work</a></li>
+  </ol>
+</nav>
+
+<!-- =================== SUMMARY =================== -->
+<section class="section" id="summary">
+  <h2 class="section-title">1. Summary</h2>
+  <p>This project studies street parking presence inference from street-level imagery through a multi-cue pipeline built around <strong>parking signs, parking meters, curb structure, curb color, and segment-level aggregation</strong>.</p>
+
+  <p>The strongest single cue remains the supervised parking-sign detector trained on MTSD, with final validation performance of mAP@50 = 0.5487, mAP@50&ndash;95 = 0.3824, image-level F1 = 0.6673, and AUROC = 0.8310. These results show that sign detection is a useful baseline, but the threshold and qualitative analyses also show that single-image sign detection is limited by small-object scale, viewpoint, and sign appearance variation.</p>
+
+  <p>The <strong>parking-meter and curb experiments</strong> refine the role of auxiliary cues. The COCO-pretrained parking-meter detector transfers partially to Mapillary Vistas, but low precision and many pole-like false positives mean parking meters should not be treated as a primary standalone cue. Curb segmentation is feasible and recovers useful structure, but curb-color inference must be conservative because strong painted curb colors are sparse and color estimates are sensitive to mask contamination. Boundary-based color extraction and confidence-margin rules make the curb-color output more interpretable, but the resulting signal remains auxiliary.</p>
+
+  <p>The final <strong>aggregation experiments</strong> provide the main systems-level result. On a controlled synthetic pseudo-segment benchmark with 225 five-image segments, segment-level aggregation improved F1 from <strong>0.319</strong> for a single-image per-segment baseline to <strong>0.830</strong>. The gain is primarily driven by recall: the baseline misses most positive segments because a single selected view often does not contain the relevant cue, while aggregation can recover evidence from any of the five views. This directly supports the original motivation of the project: street parking evidence is sparse and viewpoint-dependent, so the segment should be inferred from multiple views rather than one image.</p>
+
+  <p>The manually collected six-segment real-world dataset provides qualitative validation of the same idea. Aggregation correctly recovered <strong>five of six</strong> positive examples, including meter-only, curb-only, and mixed-cue segments that the single-image sign baseline missed. The one failure case is also informative: the visible sign was outside the detector's training distribution, showing that aggregation can compensate for sparse visibility but not for missing visual concepts.</p>
+</section>
+
+<!-- =================== HEADLINE =================== -->
+<section class="section" id="headline">
+  <h2 class="section-title">2. Headline numbers</h2>
+  <div class="stat-grid">
+    <div class="stat"><span class="stat-value">0.5487</span><span class="stat-label">Sign mAP@50</span></div>
+    <div class="stat"><span class="stat-value">0.3824</span><span class="stat-label">Sign mAP@50&ndash;95</span></div>
+    <div class="stat"><span class="stat-value">0.6673</span><span class="stat-label">Sign image-level F1</span></div>
+    <div class="stat"><span class="stat-value">0.8310</span><span class="stat-label">Sign AUROC</span></div>
+    <div class="stat"><span class="stat-value">0.319</span><span class="stat-label">Single-image baseline F1</span></div>
+    <div class="stat"><span class="stat-value">0.830</span><span class="stat-label">Aggregated F1</span></div>
+    <div class="stat"><span class="stat-value">+0.51</span><span class="stat-label">F1 lift from aggregation</span></div>
+    <div class="stat"><span class="stat-value">5/6</span><span class="stat-label">Real-world segments recovered</span></div>
+  </div>
+</section>
+
+<!-- =================== TAKEAWAYS =================== -->
+<section class="section" id="takeaways">
+  <h2 class="section-title">3. Key takeaways</h2>
+  <div class="callout callout-success">
+    <p class="mb-0"><strong>The project demonstrates a complete pipeline from cue detection to segment-level inference.</strong> Parking-sign detection is a strong starting point, but robust street parking inference requires multi-view aggregation and auxiliary cues.</p>
+  </div>
+
+  <ul>
+    <li><strong>Parking signs are the strongest explicit cue</strong>, but single-image sign detection is fundamentally limited by small-object scale and viewpoint.</li>
+    <li><strong>Parking meters transfer partially zero-shot</strong> &mdash; useful as an auxiliary cue but too noisy to stand alone.</li>
+    <li><strong>Curb segmentation is feasible</strong>, but curb-color inference must be conservative; precision matters more than coverage.</li>
+    <li><strong>Segment-level aggregation is the system-level win</strong>: weak cues become reliable when pooled across multiple views.</li>
+    <li><strong>Aggregation has a hard limit</strong> &mdash; it cannot recover segments where every view is outside the detector's visual vocabulary (the seg_005 failure case).</li>
+  </ul>
+</section>
+
+<!-- =================== FUTURE WORK =================== -->
+<section class="section" id="future">
+  <h2 class="section-title">4. Future work</h2>
+  <p>Natural directions to extend this project, ordered roughly from "cheap, high-value" to "more open-ended":</p>
+
+  <h3>Closer-to-real-world evaluation</h3>
+  <ul>
+    <li><strong>Replace synthetic pseudo-segments</strong> with a larger georeferenced segment dataset, where five-view groupings reflect actual nearby street views rather than randomly sampled images.</li>
+    <li><strong>Learn cue-fusion weights</strong> from validation data instead of hand-tuned reliability heuristics. The current 1.0 / 0.6 / 0.4 split is a reasonable starting point, but a small classifier on top of $(s_i, m_i, c_i)$ summary statistics would likely calibrate better.</li>
+    <li><strong>Incorporate road-side geometry</strong> &mdash; left/right side of the road, distance along the segment, camera heading &mdash; to disambiguate which curb each cue is associated with.</li>
+  </ul>
+
+  <h3>Stronger per-cue detectors</h3>
+  <ul>
+    <li><strong>Multi-scale and tiled inference</strong> for the sign detector to address the resolution-sensitivity findings &mdash; the qualitative experiments suggest meaningful gains are available without a new model architecture.</li>
+    <li><strong>Extend sign understanding toward OCR and rule interpretation</strong>, so the system can answer "is parking allowed <em>here, now, for this vehicle</em>?" rather than just "is there a parking sign?"</li>
+    <li><strong>Expand curb supervision</strong> to include curb color directly (rather than inferring it from segmentation + HSV), which would substantially reduce the contamination problem.</li>
+    <li><strong>Domain-tune the parking-meter detector</strong> with a small in-domain labeled set to lift the zero-shot precision.</li>
+  </ul>
+
+  <h3>Vision-Language Models (VLMs)</h3>
+  <p>A particularly promising direction is to replace or augment parts of this pipeline with a Vision-Language Model. VLMs are well-suited to this problem for several reasons:</p>
+
+  <ul>
+    <li><strong>Compositional sign understanding.</strong> Parking signs are inherently text + symbol assemblies (e.g. <em>"No parking 8 AM&ndash;6 PM Mon&ndash;Fri except permit"</em>). A VLM can read the entire sign, including time restrictions and exception clauses, in one pass &mdash; replacing the current "detect + crop + OCR + parse" cascade with a single vision-grounded reading step.</li>
+    <li><strong>Multi-cue reasoning in natural language.</strong> Today the aggregation rule is a fixed weighted-max over three numerical scores. A VLM could reason directly over a set of street-view images and produce structured output like <em>"parking is permitted on the west side of this segment between 9 AM and 5 PM"</em> &mdash; integrating signs, meters, and curb cues without a hand-built fusion rule.</li>
+    <li><strong>Better out-of-distribution behavior.</strong> The seg_005 failure case is the canonical illustration: a non-standard parking sign that is outside the MTSD training distribution. A VLM with broad visual-text grounding is more likely to recognize the visible text and symbols even without that exact sign type having been seen during fine-tuning.</li>
+    <li><strong>Auxiliary supervision generation.</strong> Even without putting a VLM in the inference loop, a strong VLM can be used <em>offline</em> to label or re-label street-view images for fine-grained parking attributes, mitigating the "no good public benchmark" problem flagged in the proposal.</li>
+  </ul>
+
+  <p>Concrete VLM-driven extensions worth trying:</p>
+  <ol>
+    <li><strong>VLM as a single-image cue extractor.</strong> Prompt a VLM with a structured query (<em>"List any parking-related evidence visible in this image: parking signs with their text, parking meters, and curb color"</em>) and feed its parsed output into the existing aggregation rule. Compare against the current sign + meter + curb stack.</li>
+    <li><strong>VLM as a segment-level reasoner.</strong> Pass all five views of a segment to a multi-image-capable VLM and ask for a single segment-level decision plus a justification. Evaluate against the synthetic and manual benchmarks.</li>
+    <li><strong>Hybrid: VLM-assisted hard cases.</strong> Keep the current cheap detector stack, and only escalate to a VLM when the aggregated score falls in an ambiguous middle range. This keeps inference cost low while improving the borderline-case precision.</li>
+    <li><strong>VLM-generated sign captions for OCR-free rule parsing.</strong> Use a VLM to produce a structured representation of each detected parking sign (e.g. JSON with <em>days, times, restriction</em>) that downstream rules can consume directly.</li>
+  </ol>
+
+  <div class="callout">
+    <p class="mb-0">A useful framing: the current system shows that <em>multi-view aggregation</em> beats single-view inference. VLMs offer a way to extend that win to <em>multi-modal aggregation within a single view</em> &mdash; reading sign text, recognizing meter shapes, and judging curb appearance jointly, rather than as three separate detectors stitched together by a hand-tuned rule.</p>
+  </div>
+</section>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <strong>CS 766 &middot; Spring 2026</strong> &middot; University of Wisconsin&ndash;Madison<br />
+      Chirag Jain &middot; Ritik Singh
+    </div>
+    <div>
+      <a href="documents.html">Documents</a> &middot;
+      <a href="code.html">Code</a> &middot;
+      <a href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report PDF</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<!-- KaTeX for the small inline math expression -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }] });"></script>
+</body>
+</html>

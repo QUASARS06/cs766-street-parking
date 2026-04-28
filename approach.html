@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Approach &middot; Street Parking Presence Inference</title>
+<meta name="description" content="Datasets, label mapping, and methodology for the multi-cue parking detection and segment-level aggregation pipeline." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+
+<!-- KaTeX for the aggregation formula -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }] });"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-brand-tag">CS 766</span>
+      <span class="nav-brand-title">Street Parking Presence Inference</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="motivation.html">Motivation</a></li>
+      <li><a href="approach.html">Approach</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="conclusion.html">Conclusion</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="code.html">Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="breadcrumb">Project &middot; Approach</p>
+    <h1>Datasets, methods, and the aggregation rule</h1>
+    <p>How the parking-sign, parking-meter, and curb pipelines are constructed, and how their outputs are pooled across multiple views to produce a segment-level parking score.</p>
+  </div>
+</header>
+
+<main>
+<div class="container container-narrow">
+
+<nav class="toc" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol>
+    <li><a href="#datasets">Datasets &amp; label mapping</a></li>
+    <li><a href="#eda">Exploratory data analysis</a></li>
+    <li><a href="#vistas">Mapillary Vistas analysis</a></li>
+    <li><a href="#sign">Parking-sign detection</a></li>
+    <li><a href="#image-eval">Image-level evaluation</a></li>
+    <li><a href="#meter">Parking-meter detection (zero-shot)</a></li>
+    <li><a href="#curb">Curb segmentation &amp; color</a></li>
+    <li><a href="#aggregation">Segment-level aggregation</a></li>
+  </ol>
+</nav>
+
+<div class="cue-legend" aria-label="Cue legend">
+  <span class="cue-tag cue-sign">Parking sign</span>
+  <span class="cue-tag cue-meter">Parking meter</span>
+  <span class="cue-tag cue-curb">Curb</span>
+  <span class="cue-tag cue-aggregation">Aggregation</span>
+  <span class="cue-tag cue-all">All cues</span>
+</div>
+
+<!-- =================== DATASETS =================== -->
+<section class="section" id="datasets">
+  <h2 class="section-title">Datasets and label mapping <span class="cue-tag cue-all">All cues</span></h2>
+  <h3>Parking-sign dataset construction <span class="cue-tag cue-sign">Sign</span></h3>
+  <p>We selected the <strong>Mapillary Traffic Sign Dataset (MTSD)</strong> as the main dataset for the parking-sign cue. MTSD provides a large number of traffic-sign annotations, but it is not directly packaged for parking inference. We therefore constructed a <strong>binary parking-sign detection dataset</strong> by mapping multiple parking-related sign variants (e.g. <code>information--parking--g1</code>, <code>information--parking--g5</code>) into a single class called <code>parking_sign</code>.</p>
+
+  <p>The final mapping includes multiple no-parking, no-stopping, parking-information, tow-away, and parking-restriction sign variants. We excluded the generic <code>other-sign</code> label because it has no consistent visual identity and would inject substantial noise. We also filtered out annotations marked as ambiguous, occluded, out-of-frame, or dummy.</p>
+
+  <p>After preprocessing, our local MTSD setup contains:</p>
+  <div class="stat-grid">
+    <div class="stat"><span class="stat-value">52,453</span><span class="stat-label">Images on disk</span></div>
+    <div class="stat"><span class="stat-value">41,909</span><span class="stat-label">Annotation files</span></div>
+    <div class="stat"><span class="stat-value">36,589</span><span class="stat-label">Train IDs</span></div>
+    <div class="stat"><span class="stat-value">5,320</span><span class="stat-label">Validation IDs</span></div>
+    <div class="stat"><span class="stat-value">10,544</span><span class="stat-label">Test IDs (unlabeled locally)</span></div>
+  </div>
+
+  <p>In practice, our experiments rely on the <strong>validation split</strong> because the available labeled annotations correspond to train/validation data. The test split IDs exist in the released split files but are not directly usable for our local evaluation pipeline due to unavailable annotations.</p>
+</section>
+
+<!-- =================== EDA =================== -->
+<section class="section" id="eda">
+  <h2 class="section-title">Exploratory data analysis <span class="cue-tag cue-sign">Sign</span></h2>
+  <p>An exploratory analysis script gives us a sense of class balance and object scale. The most important findings:</p>
+
+  <ul>
+    <li>Total raw labeled objects: <strong>206,386</strong></li>
+    <li>Total clean objects after filtering: <strong>63,806</strong></li>
+    <li>Positive images after filtering: <strong>4,446</strong> (~10.6%)</li>
+    <li>Negative images after filtering: <strong>24,390</strong></li>
+    <li>Effective negative-to-positive ratio: ~5.5:1</li>
+    <li>Total positive parking-sign instances: <strong>5,983</strong></li>
+    <li>Tiny signs (&lt; 0.1% of image area): <strong>48,317</strong> (~75.7%)</li>
+    <li>Median relative object area: <strong>0.031%</strong> of the image</li>
+  </ul>
+
+  <p>The challenge is therefore not only class imbalance, but also that most signs are <strong>very small objects</strong> in large street-view images.</p>
+
+  <figure class="figure">
+    <img class="figure-zoom" src="assets/images/labels.jpg" alt="Label distribution and bounding-box size statistics" loading="lazy" />
+    <figcaption class="figure-caption">Label distribution and bounding-box size statistics from the processed parking-sign dataset. Most parking signs are very small relative to the image &mdash; this is fundamentally a small-object detection problem.</figcaption>
+  </figure>
+</section>
+
+<!-- =================== VISTAS =================== -->
+<section class="section" id="vistas">
+  <h2 class="section-title">What Mapillary Vistas adds <span class="cue-tag cue-meter">Meter</span> <span class="cue-tag cue-curb">Curb</span></h2>
+  <p>We also analyzed <strong>Mapillary Vistas v2.0</strong> to understand what parking-related cues are actually available beyond traffic signs. Vistas contains 123 unique classes, including explicit parking-related objects:</p>
+  <ul>
+    <li><code>object--parking-meter</code> &mdash; 839 instances</li>
+    <li><code>object--traffic-sign--information-parking</code> &mdash; 3,418 instances</li>
+    <li><code>construction--flat--parking</code> &mdash; 3,355 instances</li>
+    <li><code>construction--flat--parking-aisle</code> &mdash; 247 instances</li>
+  </ul>
+
+  <p>And much richer <strong>curb structure</strong>:</p>
+  <ul>
+    <li><code>construction--barrier--curb</code> &mdash; 59,767 instances</li>
+    <li><code>construction--flat--curb-cut</code> &mdash; 17,582 instances</li>
+  </ul>
+
+  <div class="callout">
+    <p class="mb-0"><strong>Insight.</strong> Explicit parking objects in Vistas are relatively sparse, while curb-related scene structure is much more abundant. This made <em>curb modeling</em> more attractive than parking-meter modeling as a non-sign cue, although curb color itself remains harder to interpret reliably.</p>
+  </div>
+</section>
+
+<!-- =================== SIGN DETECTOR =================== -->
+<section class="section" id="sign">
+  <h2 class="section-title">Parking-sign detection <span class="cue-tag cue-sign">Sign</span></h2>
+  <p>We trained a <strong>YOLOv8m</strong> detector on the constructed binary parking-sign dataset.</p>
+
+  <div class="card">
+    <h4 class="mt-0">Training configuration</h4>
+    <ul class="mb-0">
+      <li>Model: <strong>YOLOv8m</strong></li>
+      <li>Image size: 640</li>
+      <li>Epochs: 50</li>
+      <li>Batch size: 32</li>
+      <li>Class loss weight: 2.0</li>
+      <li>Augmentations: mosaic, mixup, copy-paste</li>
+    </ul>
+  </div>
+
+  <p>Training was completed in two phases because the Kaggle session crashed after epoch 24 and had to be resumed. Even with the interruption, the final training curves were smooth and consistent, suggesting the resumed training behaved as expected.</p>
+
+  <p>From the combined curves: training and validation losses decrease steadily, precision stabilizes in the mid-0.6 range, recall improves more gradually (reflecting the difficulty of recovering small distant signs), and mAP@50 / mAP@50&ndash;95 continue improving through the later epochs with diminishing returns near the end. The detector is learning useful signal and is not obviously overfitting, but the task remains challenging.</p>
+
+  <figure class="figure">
+    <img class="figure-zoom" src="assets/images/full_training_curves.png" alt="Combined training and validation curves" loading="lazy" />
+    <figcaption class="figure-caption">Combined training and validation curves over 50 epochs. The run was completed in two stages due to infrastructure interruptions, but the losses and validation metrics show stable convergence.</figcaption>
+  </figure>
+</section>
+
+<!-- =================== IMAGE-LEVEL EVAL =================== -->
+<section class="section" id="image-eval">
+  <h2 class="section-title">Image-level evaluation <span class="cue-tag cue-sign">Sign</span></h2>
+  <p>A key methodological decision was to build a custom <strong>image-level evaluation script</strong> in addition to the standard YOLO box-level validation. This was necessary because the downstream task is not purely about bounding-box localization &mdash; we ultimately care whether an image contains parking-related <em>evidence</em> that can later be aggregated over a street segment.</p>
+
+  <p>Evaluation therefore has two parts:</p>
+  <ol>
+    <li><strong>Box-level evaluation</strong> &mdash; standard YOLO detection metrics: mAP, precision, recall.</li>
+    <li><strong>Image-level evaluation</strong> &mdash; for each image, take the maximum detection confidence across all predicted boxes and turn it into a binary parking-presence score. This gives image-level precision, recall, F1, and AUROC, which align much more closely with the downstream segment-level inference objective.</li>
+  </ol>
+</section>
+
+<!-- =================== METER =================== -->
+<section class="section" id="meter">
+  <h2 class="section-title">Parking-meter detection (zero-shot) <span class="cue-tag cue-meter">Meter</span></h2>
+  <p>For parking meters, we used a <strong>zero-shot cross-dataset</strong> evaluation. We took a COCO-pretrained detector, restricted it to the parking-meter class, and evaluated it against Mapillary Vistas parking-meter annotations. Ground-truth parking-meter polygons were converted into bounding boxes so that we could compute both image-level and box-level metrics.</p>
+
+  <p>This is purposely a "borrow-and-evaluate" setup &mdash; it tells us how much of a parking-meter signal we can get without any in-domain supervision, and helps decide whether parking meters are usable as an auxiliary cue in the aggregation stage.</p>
+</section>
+
+<!-- =================== CURB =================== -->
+<section class="section" id="curb">
+  <h2 class="section-title">Curb segmentation and color analysis <span class="cue-tag cue-curb">Curb</span></h2>
+  <p>Curb-related structure is abundant in Mapillary Vistas, so we explored curbs as an additional non-sign cue. Unlike parking signs and meters, curbs are naturally better represented as a <strong>segmentation</strong> problem rather than object detection &mdash; they are long, thin, irregular structures rather than compact objects.</p>
+
+  <h3>Binary curb segmentation</h3>
+  <p>We formulated curb detection as <strong>binary semantic segmentation</strong> using <code>construction--barrier--curb</code> as foreground and all other pixels as background. We trained a U-Net-based segmentation model. It localizes curb regions reasonably well but the predicted masks are often <strong>thin and fragmented</strong>, especially when curbs are distant, visually smooth, or weakly separated from the road surface.</p>
+
+  <h3>HSV-based curb color analysis</h3>
+  <p>After obtaining curb masks, we run a second stage for <strong>curb color analysis</strong>. The goal is not to recover exact municipal parking rules, but to extract coarse visual categories &mdash; <em>red, yellow, green, white, gray, unknown</em>. In practice this turned out to be substantially harder than mask extraction itself, because color estimation is highly sensitive to <strong>mask purity</strong>: if non-curb pixels (crosswalk markings, lane paint, asphalt) are included, the resulting color distribution becomes ambiguous.</p>
+
+  <p>To reduce contamination, we refined the color pipeline in two ways:</p>
+  <ul>
+    <li><strong>Boundary-pixel extraction.</strong> We restrict color extraction to boundary pixels derived from the predicted mask, since the curb itself is most naturally expressed as a thin boundary rather than a filled region.</li>
+    <li><strong>Confidence-margin rule.</strong> A color prediction is accepted only if the top color score is both sufficiently large and sufficiently separated from the second-best score. Otherwise, the result is labeled <code>unknown</code>.</li>
+  </ul>
+
+  <div class="callout callout-success">
+    <p class="mb-0">This makes the curb-color output intentionally <strong>conservative</strong> &mdash; preferable for downstream cue fusion and easier to justify in qualitative analysis.</p>
+  </div>
+</section>
+
+<!-- =================== AGGREGATION =================== -->
+<section class="section" id="aggregation">
+  <h2 class="section-title">Segment-level aggregation methodology <span class="cue-tag cue-aggregation">Aggregation</span></h2>
+  <p>The final stage of the system aggregates per-image cue predictions into a segment-level score. This sits in methodology rather than results because aggregation <strong>changes the unit of inference</strong>: the earlier detectors answer <em>"what cue is visible in this image?"</em> while aggregation answers <em>"does this local segment contain enough parking-related evidence across multiple views?"</em></p>
+
+  <p>For each image $i$ in a five-image segment, we record three model-derived scores:</p>
+  <ul>
+    <li>$s_i$ &mdash; maximum parking-sign confidence in the image,</li>
+    <li>$m_i$ &mdash; maximum parking-meter confidence in the image,</li>
+    <li>$c_i$ &mdash; positive curb-color score, defined as the maximum of the yellow, green, and white curb-color scores. Red is excluded because red curbs usually indicate <em>no</em> parking. In a more complete rule-aware system, red could be modeled as negative evidence; here we simply exclude it from the positive curb score to keep aggregation simple.</li>
+  </ul>
+
+  <p>We experimented with max, mean, count-above-threshold, and noisy-OR features. The primary reported aggregation rule is a <strong>weighted max</strong>:</p>
+
+  <p>$$ S_{\text{segment}} = \max\!\left(\max_i s_i,\; 0.6 \max_i m_i,\; 0.4 \max_i c_i\right). $$</p>
+
+  <h3>Why max-pooling and these weights?</h3>
+  <p>Max pooling is motivated by the multiple-instance nature of the task. A street segment can be positive even if only one of its views contains a visible parking sign or meter. Averaging across views would dilute exactly the sparse evidence we are trying to recover. Max pooling instead asks whether <em>any</em> view contains strong evidence.</p>
+
+  <p>The weights are simple <strong>reliability-based heuristics</strong>, not learned parameters:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Cue</th><th>Weight</th><th>Reasoning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Parking sign</td><td class="num">1.0</td><td>Most direct and best-performing cue.</td></tr>
+        <tr><td>Parking meter (zero-shot)</td><td class="num">0.6</td><td>Informative but noisy in the zero-shot setting.</td></tr>
+        <tr><td>Curb color</td><td class="num">0.4</td><td>Most indirect; depends heavily on segmentation quality.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small">Weights encode the relative trustworthiness observed in the preceding experiments, not a learned calibration. A future system should learn cue weights on a larger georeferenced validation set.</p>
+</section>
+
+<hr class="divider" />
+
+<section class="section">
+  <p class="muted">For training curves, threshold sweeps, and the segment-level aggregation experiments, see the <a href="results.html">Results</a> page. For practical infrastructure challenges (Kaggle interruptions, storage limits, GPU access), see the <a href="challenges.html">Challenges</a> page.</p>
+</section>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <strong>CS 766 &middot; Spring 2026</strong> &middot; University of Wisconsin&ndash;Madison<br />
+      Chirag Jain &middot; Ritik Singh
+    </div>
+    <div>
+      <a href="documents.html">Documents</a> &middot;
+      <a href="code.html">Code</a> &middot;
+      <a href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report PDF</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

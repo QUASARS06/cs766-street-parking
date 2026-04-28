@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Code &amp; Data &middot; Street Parking Presence Inference</title>
+    <meta
+      name="description"
+      content="Source code, training scripts, and data preparation for the multi-cue street parking inference project."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="nav-brand-tag">CS 766</span>
+          <span class="nav-brand-title">Street Parking Presence Inference</span>
+        </a>
+        <button
+          class="nav-toggle"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          &#9776;
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="motivation.html">Motivation</a></li>
+          <li><a href="approach.html">Approach</a></li>
+          <li><a href="results.html">Results</a></li>
+          <li><a href="challenges.html">Challenges</a></li>
+          <li><a href="conclusion.html">Conclusion</a></li>
+          <li><a href="documents.html">Documents</a></li>
+          <li><a href="code.html">Code</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <header class="page-hero">
+      <div class="container">
+        <p class="breadcrumb">Project &middot; Code &amp; Data</p>
+        <h1>Source code, models, and data</h1>
+        <p>
+          Everything you need to reproduce the experiments &mdash; training
+          scripts, evaluation pipelines, and dataset preparation utilities
+          &mdash; lives in the GitHub repository linked below.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <div class="container container-narrow">
+        <!-- =================== PRIMARY LINK =================== -->
+        <section class="section">
+          <div class="card">
+            <h3 class="mt-0">GitHub repository</h3>
+            <p>
+              The full source for the project &mdash; data preparation, model
+              training, evaluation pipelines, and segment-level aggregation
+              &mdash; is hosted on GitHub.
+            </p>
+            <p>
+              <a
+                class="btn"
+                id="repo-link"
+                href="https://github.com/QUASARS06/street-parking-presence-inference"
+                target="_blank"
+                rel="noopener"
+                >Open repository on GitHub</a
+              >
+            </p>
+            <p class="muted small mb-0">
+              Trained model weights and the manual real-world segment images
+              live as release assets on the same repo &mdash; see the
+              <a
+                href="https://github.com/QUASARS06/street-parking-presence-inference/releases/tag/v1.0"
+                target="_blank"
+                rel="noopener"
+                >v1.0 release</a
+              >.
+            </p>
+          </div>
+        </section>
+
+        <!-- =================== DOWNLOADS =================== -->
+        <section class="section">
+          <h2 class="section-title">Direct downloads</h2>
+          <p>
+            Code, datasets, trained weights, and the manual real-world segment
+            images. Source and weights are hosted on the project's GitHub repo
+            and v1.0 release; the two Mapillary datasets must be downloaded
+            from Mapillary directly.
+          </p>
+
+          <div class="cards-grid">
+            <div class="card">
+              <h3 class="mt-0">Source ZIP</h3>
+              <p>
+                Snapshot of the repository at the time of submission. Easiest
+                way to grab everything in one go.
+              </p>
+              <a
+                class="btn btn-secondary"
+                id="src-zip"
+                href="https://github.com/QUASARS06/street-parking-presence-inference/archive/refs/tags/v1.0.zip"
+                target="_blank"
+                rel="noopener"
+                >Download source (.zip)</a
+              >
+            </div>
+
+            <div class="card">
+              <h3 class="mt-0">Mapillary Traffic Sign Detection (MTSD)</h3>
+              <p>The Mapillary Traffic Sign Detection dataset.</p>
+              <a
+                class="btn btn-secondary"
+                id="mtsd-data"
+                href="https://www.mapillary.com/dataset/trafficsign"
+                target="_blank"
+                rel="noopener"
+                >Download Data</a
+              >
+            </div>
+
+            <div class="card">
+              <h3 class="mt-0">Mapillary Vistas</h3>
+              <p>
+                The Mapillary Vistas dataset is a street-level imagery dataset
+                used in the Parking Meter and Curb detection experiments.
+              </p>
+              <a
+                class="btn btn-secondary"
+                id="vistas-data"
+                href="https://www.mapillary.com/dataset/vistas"
+                target="_blank"
+                rel="noopener"
+                >Download Data</a
+              >
+            </div>
+
+            <div class="card">
+              <h3 class="mt-0">Trained sign detector</h3>
+              <p>
+                YOLOv8m parking-sign detector weights (50-epoch checkpoint,
+                mAP@50 = 0.5487). Useful as a drop-in starting point.
+              </p>
+              <a
+                class="btn btn-secondary"
+                id="sign-weights"
+                href="https://github.com/QUASARS06/street-parking-presence-inference/releases/download/v1.0/parking_sign_best.pt"
+                target="_blank"
+                rel="noopener"
+                >Download weights (.pt)</a
+              >
+            </div>
+
+            <div class="card">
+              <h3 class="mt-0">Curb segmentation model</h3>
+              <p>
+                U-Net curb segmentation weights (best-Dice checkpoint, epoch 17,
+                val Dice = 0.5184).
+              </p>
+              <a
+                class="btn btn-secondary"
+                id="curb-weights"
+                href="https://github.com/QUASARS06/street-parking-presence-inference/releases/download/v1.0/curb_best.pt"
+                target="_blank"
+                rel="noopener"
+                >Download weights (.pt)</a
+              >
+            </div>
+
+            <div class="card">
+              <h3 class="mt-0">Manual segment images</h3>
+              <p>
+                The 30 manually collected real-world images (six segments
+                &times; five views) used in the qualitative aggregation
+                experiments.
+              </p>
+              <a
+                class="btn btn-secondary"
+                id="manual-data"
+                href="https://github.com/QUASARS06/street-parking-presence-inference/releases/download/v1.0/segments.zip"
+                target="_blank"
+                rel="noopener"
+                >Download images (.zip)</a
+              >
+            </div>
+          </div>
+
+        </section>
+
+        <!-- =================== STRUCTURE =================== -->
+        <section class="section">
+          <h2 class="section-title">What's in the repository</h2>
+          <p>
+            High-level layout of
+            <a
+              href="https://github.com/QUASARS06/street-parking-presence-inference"
+              target="_blank"
+              rel="noopener"
+              >QUASARS06/street-parking-presence-inference</a
+            >. Each top-level folder is a self-contained sub-project with its
+            own scripts and outputs.
+          </p>
+
+          <div class="card">
+            <h4 class="mt-0">Top-level layout</h4>
+            <pre><code>street-parking-presence-inference/
+├── mtsd_project/                # Parking-sign detection on MTSD
+│   ├── scripts/                 #   Data prep, training, evaluation, viz
+│   ├── dataset/                 #   YOLO-format binary parking-sign dataset (5-image samples)
+│   ├── data/                    #   Processed images/labels (samples)
+│   ├── outputs/                 #   Eval CSVs, threshold sweeps, category samples
+│   ├── sample_images/           #   Manually collected qualitative images
+│   └── parking_signs.yaml       #   YOLO data config
+│
+├── Mapillary_Vistas_Dataset/    # Curb segmentation + zero-shot meter eval
+│   ├── scripts/                 #   Curb U-Net training, meter zero-shot eval
+│   ├── curb_segmentation/       #   Mask metadata + samples
+│   ├── training/, validation/, testing/   # 5-image dataset samples
+│   ├── parking_meter_imgs/      #   Vistas parking-meter samples
+│   └── outputs/                 #   Meter eval CSVs
+│
+├── manual_segments_dataset/     # 30-image real-world qualitative dataset
+│   ├── segments/                #   6 segments × 5 views (raw images)
+│   ├── outputs/                 #   Visualization outputs + scores CSVs
+│   └── segments.csv             #   Index
+│
+└── parking_aggregation_project/ # Segment-level aggregation system
+    ├── scripts/                 #   Synthetic-segment builder, aggregation, eval
+    ├── metadata/                #   Per-image cue scores
+    └── outputs/synthetic_segments/  # Synthetic benchmark + per-threshold results
+</code></pre>
+          </div>
+
+          <h3>Reproducing the main results</h3>
+          <ol>
+            <li>
+              Download
+              <a
+                href="https://www.mapillary.com/dataset/trafficsign"
+                target="_blank"
+                rel="noopener"
+                >MTSD</a
+              >
+              and
+              <a
+                href="https://www.mapillary.com/dataset/vistas"
+                target="_blank"
+                rel="noopener"
+                >Mapillary Vistas v2.0</a
+              >
+              from their official sources. The repo only ships 5-image samples
+              for each split.
+            </li>
+            <li>
+              Build the binary parking-sign YOLO dataset and run training /
+              evaluation from <code>mtsd_project/scripts/</code>.
+            </li>
+            <li>
+              Train the curb segmentation U-Net and run the zero-shot
+              parking-meter evaluation from
+              <code>Mapillary_Vistas_Dataset/scripts/</code>.
+            </li>
+            <li>
+              Build the synthetic pseudo-segment benchmark and run the
+              segment-level aggregation evaluation from
+              <code>parking_aggregation_project/scripts/</code>.
+            </li>
+            <li>
+              Reproduce the annotated qualitative figures by running the
+              visualization scripts against the
+              <code>manual_segments_dataset/</code> bundle (also available as
+              <code>segments.zip</code> from the v1.0 release).
+            </li>
+          </ol>
+        </section>
+
+        <!-- =================== ENV =================== -->
+        <section class="section">
+          <h2 class="section-title">Environment</h2>
+          <p>
+            The experiments were primarily run on Kaggle (Tesla T4, P100) and a
+            local Apple Silicon machine. Approximate environment:
+          </p>
+          <ul>
+            <li>Python 3.10+</li>
+            <li>PyTorch 2.x</li>
+            <li>Ultralytics YOLO (<code>ultralytics</code> package)</li>
+            <li><code>segmentation-models-pytorch</code> for the curb U-Net</li>
+            <li>
+              <code>opencv-python</code>, <code>numpy</code>,
+              <code>scikit-learn</code>, <code>matplotlib</code>
+            </li>
+          </ul>
+          <p>
+            Exact versions and the recommended environment are in the repo's
+            <code>requirements.txt</code> / <code>environment.yml</code>.
+          </p>
+        </section>
+
+        <hr class="divider" />
+
+        <section class="section">
+          <p class="muted small">
+            If you have trouble reproducing a result or running a script, please
+            open an issue on the GitHub repository and we'll take a look.
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>
+          <strong>CS 766 &middot; Spring 2026</strong> &middot; University of
+          Wisconsin&ndash;Madison<br />
+          Chirag Jain &middot; Ritik Singh
+        </div>
+        <div>
+          <a href="documents.html">Documents</a> &middot;
+          <a href="code.html">Code</a> &middot;
+          <a
+            href="assets/pdfs/cs766_report_final.pdf"
+            target="_blank"
+            rel="noopener"
+            >Final Report PDF</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

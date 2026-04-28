@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Street Parking Presence Inference &middot; CS 766 Project</title>
+<meta name="description" content="Multi-cue detection and segment-level aggregation for inferring on-street parking presence from street-level imagery. CS 766 (Computer Vision) — University of Wisconsin–Madison." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<!-- Favicon. Drop your icon files into the website/assets/ folder.
+     Browsers fall back gracefully if any file is missing (a 404 just skips that link).
+     Recommended: a 32x32 PNG at assets/favicon.png (smallest setup that works everywhere). -->
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<!-- ============== NAVBAR ============== -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-brand-tag">CS 766</span>
+      <span class="nav-brand-title">Street Parking Presence Inference</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="motivation.html">Motivation</a></li>
+      <li><a href="approach.html">Approach</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="conclusion.html">Conclusion</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="code.html">Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============== HERO ============== -->
+<header class="hero">
+  <div class="container hero-center">
+    <h1>Street Parking Presence Inference from Street-Level Imagery</h1>
+    <p class="subtitle">A multi-cue detection and segment-level aggregation pipeline that combines parking signs, parking meters, and curb structure to infer whether a street segment supports on-street parking.</p>
+    <p class="authors"><strong>Chirag Jain</strong> &middot; <strong>Ritik Singh</strong></p>
+    <p class="affiliation">University of Wisconsin&ndash;Madison &middot; CS 766 Computer Vision &middot; Spring 2026</p>
+
+    <div class="hero-cta">
+      <a class="btn" href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report (PDF)</a>
+      <a class="btn btn-secondary" href="documents.html">Proposal &amp; Midterm</a>
+      <a class="btn btn-ghost" href="code.html">Source Code</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="container">
+
+<!-- ============== OVERVIEW ============== -->
+<section class="section">
+  <h2 class="section-title">Overview</h2>
+  <p class="section-lead">A short tour of what the project is, what we built, and what we found.</p>
+
+  <div class="card">
+    <p>This project studies <strong>street parking presence inference</strong> from street-level imagery. The core idea is to detect image-level parking-related cues such as <em>parking signs, parking meters, and curb-related evidence</em>, and then aggregate these cues across nearby views to infer whether a street segment supports on-street parking. The framing is motivated by a practical reality of the task: parking cues are often <strong>small, sparse, occluded, and viewpoint-dependent</strong>, so single-image predictions are brittle &mdash; a negative result from one image may simply mean the relevant cue is outside the field of view or too small to detect reliably.</p>
+
+    <p>We focus on three visual cues:</p>
+    <ul>
+      <li><strong>Parking signs</strong>, modeled as supervised object detection on the Mapillary Traffic Sign Dataset (MTSD).</li>
+      <li><strong>Parking meters</strong>, evaluated in a zero-shot cross-dataset setting using a COCO-pretrained detector on Mapillary Vistas.</li>
+      <li><strong>Curb structure and curb color</strong>, modeled through binary curb segmentation followed by a heuristic HSV color analysis.</li>
+    </ul>
+
+    <p>Among these, the <strong>parking-sign detector emerges as the strongest explicit cue</strong>. Parking meters provide some transferable signal but are noisy. Curb color is visually meaningful in some cases, but it is sparse and difficult to recover robustly &mdash; especially when segmentation masks are thin or contaminated by nearby road markings.</p>
+
+    <p>The final project result is not just a set of independent detectors. The detectors are used as image-level components inside a <strong>segment-level aggregation system</strong>. This is important because the true downstream task is closer to <em>"does this local street segment contain parking-related evidence?"</em> rather than <em>"does this single image contain a visible sign?"</em>. The aggregation experiments show that pooling evidence across multiple views substantially improves recall compared with single-image inference, while retaining useful precision.</p>
+
+    <p>The overall result is a multi-cue system in which:</p>
+    <ul>
+      <li>parking signs provide the strongest explicit parking evidence,</li>
+      <li>parking meters provide a weak but non-random auxiliary signal,</li>
+      <li>curb segmentation is feasible,</li>
+      <li>curb color is possible to estimate conservatively, but should be treated as a sparse auxiliary cue rather than a primary standalone signal,</li>
+      <li>segment-level aggregation substantially improves recovery of parking-related evidence when cues are sparse or only visible from some viewpoints.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============== KEY RESULTS ============== -->
+<section class="section">
+  <h2 class="section-title">Headline Results</h2>
+  <p class="section-lead">Highlights from the final validation experiments. See <a href="results.html">Results</a> for the full picture.</p>
+
+  <div class="stat-grid">
+    <div class="stat">
+      <span class="stat-value">0.5487</span>
+      <span class="stat-label">Sign mAP@50</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">0.6673</span>
+      <span class="stat-label">Sign image-level F1</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">0.831</span>
+      <span class="stat-label">Sign image-level AUROC</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">0.830</span>
+      <span class="stat-label">Segment-level F1 (aggregated)</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">+0.51</span>
+      <span class="stat-label">F1 gain over single-image baseline</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">5/6</span>
+      <span class="stat-label">Real-world segments recovered</span>
+    </div>
+  </div>
+
+  <div class="callout callout-success">
+    <p><strong>Main takeaway.</strong> Aggregating evidence across multiple nearby views lifts segment-level F1 from <strong>0.319</strong> (single-image baseline) to <strong>0.830</strong>. Recall jumps from 0.200 to 0.924 with only a small precision drop, directly addressing the dominant failure mode of single-image inference: missing evidence due to viewpoint and sparsity.</p>
+  </div>
+</section>
+
+<!-- ============== EXPLORE ============== -->
+<section class="section">
+  <h2 class="section-title">Explore the project</h2>
+  <p class="section-lead">The site mirrors the structure of the final report, with extra tabs for the proposal, midterm report, and source code.</p>
+
+  <div class="cards-grid">
+    <div class="card">
+      <h3>Motivation</h3>
+      <p>Why street parking inference matters, what makes it hard, and where prior work falls short. Pulled from the project proposal and report introduction.</p>
+      <a class="btn btn-secondary" href="motivation.html">Read the motivation &rarr;</a>
+    </div>
+
+    <div class="card">
+      <h3>Approach</h3>
+      <p>Datasets, label mapping, the YOLOv8 sign detector, zero-shot meter detection, curb U-Net segmentation, and the segment-level aggregation rule.</p>
+      <a class="btn btn-secondary" href="approach.html">See the approach &rarr;</a>
+    </div>
+
+    <div class="card">
+      <h3>Results</h3>
+      <p>Quantitative tables, threshold sweeps, training curves, qualitative wins and failures, and the segment-level aggregation experiments.</p>
+      <a class="btn btn-secondary" href="results.html">View the results &rarr;</a>
+    </div>
+
+    <div class="card">
+      <h3>Challenges</h3>
+      <p>Practical challenges (storage, infrastructure, scale) and known limitations of the aggregation evaluation. Wrap-up and future work live on the Conclusion page.</p>
+      <a class="btn btn-secondary" href="challenges.html">Read the challenges &rarr;</a>
+    </div>
+
+    <div class="card">
+      <h3>Documents</h3>
+      <p>Full PDFs of the project proposal, midterm report, and final report &mdash; viewable in-browser and downloadable.</p>
+      <a class="btn btn-secondary" href="documents.html">Open documents &rarr;</a>
+    </div>
+
+    <div class="card">
+      <h3>Code &amp; Data</h3>
+      <p>Source code, training scripts, and dataset preparation notebooks. Hosted on GitHub for reproducibility.</p>
+      <a class="btn btn-secondary" href="code.html">Get the code &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TEASER FIGURE ============== -->
+<section class="section">
+  <h2 class="section-title">A glimpse of the system</h2>
+  <p class="section-lead">A real-world segment where the parking-sign detector contributes nothing, but the auxiliary cues correctly recover the segment as positive.</p>
+
+  <div class="figure-grid cols-5">
+    <figure class="figure">
+      <img class="figure-zoom" data-gallery="home-seg_001" data-caption="seg_001 view 0 — meter-only segment" src="assets/images/figures/seg_001_img_0_annotated.jpg" alt="Manual segment seg_001 view 0" loading="lazy" />
+      <figcaption class="figure-caption">View 0</figcaption>
+    </figure>
+    <figure class="figure">
+      <img class="figure-zoom" data-gallery="home-seg_001" data-caption="seg_001 view 1" src="assets/images/figures/seg_001_img_1_annotated.jpg" alt="Manual segment seg_001 view 1" loading="lazy" />
+      <figcaption class="figure-caption">View 1</figcaption>
+    </figure>
+    <figure class="figure">
+      <img class="figure-zoom" data-gallery="home-seg_001" data-caption="seg_001 view 2" src="assets/images/figures/seg_001_img_2_annotated.jpg" alt="Manual segment seg_001 view 2" loading="lazy" />
+      <figcaption class="figure-caption">View 2</figcaption>
+    </figure>
+    <figure class="figure">
+      <img class="figure-zoom" data-gallery="home-seg_001" data-caption="seg_001 view 3" src="assets/images/figures/seg_001_img_3_annotated.jpg" alt="Manual segment seg_001 view 3" loading="lazy" />
+      <figcaption class="figure-caption">View 3</figcaption>
+    </figure>
+    <figure class="figure">
+      <img class="figure-zoom" data-gallery="home-seg_001" data-caption="seg_001 view 4" src="assets/images/figures/seg_001_img_4_annotated.jpg" alt="Manual segment seg_001 view 4" loading="lazy" />
+      <figcaption class="figure-caption">View 4</figcaption>
+    </figure>
+  </div>
+  <p class="figure-caption"><strong>Manual segment seg_001 (meter-only).</strong> The sign detector produces no signal. The parking-meter cue fires across multiple views, and after weighted aggregation the segment crosses the decision threshold &mdash; a case the sign-only baseline misses entirely. <em>Click any view to step through the segment in a slideshow.</em></p>
+</section>
+
+<!-- ============== NOTE ============== -->
+<section class="section">
+  <div class="callout callout-note">
+    <p class="small mb-0"><strong>Note on writing assistance.</strong> This report and website were prepared with assistance from Claude/ChatGPT for drafting, restructuring, and language refinement. All content, results, experimental details, and observations were produced and verified by the authors.</p>
+  </div>
+</section>
+
+</div>
+</main>
+
+<!-- ============== FOOTER ============== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <strong>CS 766 &middot; Spring 2026</strong> &middot; University of Wisconsin&ndash;Madison<br />
+      Chirag Jain &middot; Ritik Singh
+    </div>
+    <div>
+      <a href="documents.html">Documents</a> &middot;
+      <a href="code.html">Code</a> &middot;
+      <a href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report PDF</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Challenges &middot; Street Parking Presence Inference</title>
+<meta name="description" content="Practical challenges and limitations encountered during the multi-cue street-parking inference project." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-brand-tag">CS 766</span>
+      <span class="nav-brand-title">Street Parking Presence Inference</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="motivation.html">Motivation</a></li>
+      <li><a href="approach.html">Approach</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="conclusion.html">Conclusion</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="code.html">Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="breadcrumb">Project &middot; Challenges</p>
+    <h1>Practical challenges and limitations</h1>
+    <p>What got in the way during the experiments and what the results don't yet prove. The wrap-up and future directions live on the <a href="conclusion.html">Conclusion</a> page.</p>
+  </div>
+</header>
+
+<main>
+<div class="container container-narrow">
+
+<nav class="toc" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol>
+    <li><a href="#infra">Infrastructure &amp; storage constraints</a></li>
+    <li><a href="#local-eval">Evaluation on local hardware</a></li>
+    <li><a href="#difficulty">Task difficulty</a></li>
+    <li><a href="#limits">Aggregation evaluation limitations</a></li>
+  </ol>
+</nav>
+
+<!-- =================== INFRA =================== -->
+<section class="section" id="infra">
+  <h2 class="section-title">1. Infrastructure and storage constraints</h2>
+  <p>The datasets and preprocessing artifacts are large &mdash; tens of gigabytes of images and annotations &mdash; which created repeated issues across local storage, Google Colab, and remote execution environments. <strong>MTSD was 36 GB</strong> and <strong>Mapillary Vistas 32.6 GB</strong>. In particular:</p>
+  <ul>
+    <li>Google Colab storage limits made it difficult to keep the full dataset and processed outputs in one place.</li>
+    <li>We initially explored multiple environments &mdash; local setup, cloud-based options.</li>
+    <li>We attempted to use <strong>CloudLab</strong> but acquiring GPU instances was difficult. Even when a short A30 allocation was obtained, the combination of large data transfer and missing GPU drivers made the setup impractical.</li>
+    <li>Kaggle itself introduced interruptions: the sign training run <strong>crashed after epoch 24</strong> and had to be resumed separately.</li>
+  </ul>
+</section>
+
+<!-- =================== LOCAL EVAL =================== -->
+<section class="section" id="local-eval">
+  <h2 class="section-title">2. Evaluation on local hardware</h2>
+  <p>On a local Apple Silicon machine, the first attempt at full-image inference for the validation split was killed during prediction because the script tried to pass the entire validation set in a single batch. We fixed this by changing the evaluation code to use <strong>chunked prediction</strong>. This was an important engineering improvement because it made local validation feasible and reproducible.</p>
+
+  <p>Parking-meter evaluation introduced additional difficulties. Full zero-shot evaluation with YOLO11x at high inference resolution was slow locally, and moving the evaluation to Kaggle required extra work because of GPU/runtime compatibility issues. We eventually ran the full validation experiment by restructuring the evaluation code into chunked batches on Kaggle.</p>
+</section>
+
+<!-- =================== DIFFICULTY =================== -->
+<section class="section" id="difficulty">
+  <h2 class="section-title">3. Task difficulty</h2>
+  <p>The dataset contains many negatives and, more importantly, extremely small positive objects. The hardest part of the sign-detection problem is not simple class imbalance, but <strong>small-object detection under varied viewpoint and scale</strong>. The qualitative experiments with zoom and inference resolution strongly confirmed this.</p>
+
+  <p>The same issue reappears in the parking-meter experiments. Many zero-shot failures were caused by meters being too small, too far away, or visually confusable with generic poles and other narrow street furniture.</p>
+
+  <p>A related but distinct difficulty appeared in the curb experiments. Although curb annotations are much more abundant than parking-meter annotations, curb <em>color</em> is not directly supervised and is much harder to recover robustly than curb presence. The main challenge was not simply detecting curb pixels but ensuring those pixels actually corresponded to the curb itself rather than adjacent crosswalk paint, road markings, or asphalt. This made the curb module less of a pure segmentation problem and more of a <strong>joint segmentation-and-representation problem</strong>, where uncertainty handling became an essential part of the final design.</p>
+</section>
+
+<!-- =================== LIMITS =================== -->
+<section class="section" id="limits">
+  <h2 class="section-title">4. Limitations of the aggregation evaluation</h2>
+  <p>The segment-level aggregation experiments are useful but should be interpreted with the right scope.</p>
+
+  <h3>The synthetic benchmark</h3>
+  <p>The synthetic pseudo-segment benchmark tests the mathematical and systems behavior of aggregation under sparse cue visibility. It does <strong>not</strong> prove full geographic street-segment reasoning &mdash; the synthetic segments are assembled from images across datasets rather than from a road network. This was a deliberate design choice: the available public datasets provide image-level annotations for signs, meters, and curbs, but not clean, labeled street-segment parking ground truth.</p>
+
+  <h3>The real-world six-segment dataset</h3>
+  <p>The manually collected six-segment dataset addresses this limitation qualitatively by using real nearby views from actual street locations. It is intentionally small &mdash; manual collection is slow, and each example requires finding a suitable street, capturing multiple nearby views, ensuring the views correspond to the same local curbside context, and writing notes about the visible cue pattern. The manual examples are best understood as <strong>real-world validation cases</strong>, not a statistically significant benchmark.</p>
+
+  <h3>Heuristic aggregation rule</h3>
+  <p>The aggregation rule itself is heuristic. The weights for signs (1.0), meters (0.6), and curb color (0.4) are based on observed cue reliability rather than learned calibration. This is appropriate for the current project stage because the goal is to demonstrate the value of aggregation, but a future system should learn cue weights on a larger georeferenced validation set and explicitly model spatial consistency, road side, and distance along the street.</p>
+</section>
+
+<hr class="divider" />
+
+<section class="section">
+  <p class="muted">For the project's wrap-up summary and future-work directions, head to the <a href="conclusion.html">Conclusion</a> page.</p>
+</section>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <strong>CS 766 &middot; Spring 2026</strong> &middot; University of Wisconsin&ndash;Madison<br />
+      Chirag Jain &middot; Ritik Singh
+    </div>
+    <div>
+      <a href="documents.html">Documents</a> &middot;
+      <a href="code.html">Code</a> &middot;
+      <a href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Final Report PDF</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

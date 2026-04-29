@@ -41,6 +41,21 @@
   }
   .doc-panel { display: none; }
   .doc-panel.active { display: block; }
+  .presentation-video {
+    display: block;
+    width: 100%;
+    max-width: 1000px;
+    aspect-ratio: 16 / 9;
+    margin: 0.5rem auto 1.25rem;
+    background: #000;
+    border-radius: var(--radius-md);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  }
+  .presentation-h3 {
+    margin: 1.25rem 0 0.5rem;
+    font-size: 1.05rem;
+    color: #334155;
+  }
 </style>
 </head>
 <body>
@@ -77,13 +92,42 @@
 <div class="container">
 
 <div class="doc-tabs" role="tablist">
-  <button class="doc-tab active" role="tab" data-tab="final" aria-selected="true">Final Report</button>
+  <button class="doc-tab active" role="tab" data-tab="presentation" aria-selected="true">Presentation</button>
+  <button class="doc-tab" role="tab" data-tab="final" aria-selected="false">Final Report</button>
   <button class="doc-tab" role="tab" data-tab="midterm" aria-selected="false">Midterm Report</button>
   <button class="doc-tab" role="tab" data-tab="proposal" aria-selected="false">Project Proposal</button>
 </div>
 
+<!-- Presentation -->
+<section class="doc-panel active" id="panel-presentation" role="tabpanel">
+  <div class="pdf-actions">
+    <a class="btn" href="assets/videos/cs766_presentation.mov" download>Download video (.mov)</a>
+    <a class="btn btn-secondary" href="assets/pdfs/cs766_presentation.pdf" download>Download slides (.pdf)</a>
+    <a class="btn btn-ghost" href="assets/pdfs/cs766_presentation.pdf" target="_blank" rel="noopener">Open slides in new tab</a>
+    <span class="pdf-meta">April 2026 &middot; 7-min recorded talk</span>
+  </div>
+  <p class="muted small">In-class presentation (recorded, ~7 minutes). Video first, slides below.</p>
+
+  <video
+    controls
+    preload="metadata"
+    playsinline
+    class="presentation-video"
+    poster="assets/images/figures/seg_001_img_0_annotated.jpg"
+  >
+    <source src="assets/videos/cs766_presentation.mov" type="video/mp4" />
+    <source src="assets/videos/cs766_presentation.mov" type="video/quicktime" />
+    Your browser doesn&rsquo;t support embedded video.
+    <a href="assets/videos/cs766_presentation.mov">Download the recording</a>
+    to watch it locally.
+  </video>
+
+  <h3 class="presentation-h3">Slides</h3>
+  <iframe class="pdf-frame" src="assets/pdfs/cs766_presentation.pdf#view=FitH" title="Presentation Slides"></iframe>
+</section>
+
 <!-- Final Report -->
-<section class="doc-panel active" id="panel-final" role="tabpanel">
+<section class="doc-panel" id="panel-final" role="tabpanel">
   <div class="pdf-actions">
     <a class="btn" href="assets/pdfs/cs766_report_final.pdf" download>Download PDF</a>
     <a class="btn btn-secondary" href="assets/pdfs/cs766_report_final.pdf" target="_blank" rel="noopener">Open in new tab</a>
